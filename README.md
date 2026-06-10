@@ -1,77 +1,82 @@
 # ACC.NET
 
-An accounting system written in .NET using Domain-Driven Design.
+A modular accounting system built with .NET, Domain-Driven Design, CQRS and Event Sourcing.
 
 ## Status
 
 ACC.NET is under active development.
 
-Current focus:
-
-- Discover the domain.
-- Set the architecture and design principles.
-- Scaffold the project.
-- Implement a minimal set of essential accounting use cases for an MVP.
+Current focus is on implementing a minimal set of use cases for a minimum accounting application.
 
 ## Domain Model
 
-The diagram below illustrates the subdomains, bounded contexts, and relationships between them.
+The diagram below summarizes the current semantic model of subdomains, bounded contexts, and relationships between them.
 
 ```mermaid
 flowchart TB
-    Product["ACC.NET\nModular Monolith"]
-
-    Product --> InstitutionalFoundation["Institutional Foundation"]
-    Product --> Accounting["Accounting"]
-    Product --> Taxation["Taxation"]
-
-    subgraph IF["Institutional Foundation Subdomain"]
-        Identity["Identity\nBounded Context"]
-        Authority["Authority\nBounded Context"]
+    subgraph IF["Identity & Access"]
+        Identity["Identity"]
+        Authority["Authority"]
     end
 
-    subgraph AC["Accounting Subdomain"]
-        AccountingSubject["Accounting Subject\nBounded Context"]
-        Ledger["Ledger\nBounded Context"]
-        Evidence["Evidence\nBounded Context"]
-        Reporting["Reporting\nBounded Context"]
-    end
-
-    subgraph TX["Taxation Subdomain"]
-        VAT["VAT\nBounded Context"]
+    subgraph AC["Accounting"]
+        AccountingSubject["Accounting Subject"]
+        Ledger["Ledger"]
+        Evidence["Evidence"]
+        Reporting["Reporting"]
     end
 
     Evidence -->|supports recorded facts| Ledger
     Ledger -->|provides accounting state| Reporting
-    VAT -->|produces tax accounting facts| Ledger
     AccountingSubject -->|defines accounting scope| Ledger
-    Identity -->|identifies actors| Authority
+    Authority -->|assigns roles to users| Identity
     Authority -->|authorizes acts| Ledger
-    Authority -->|authorizes declarations| VAT
 ```
 
 ## Architecture
 
 ACC.NET is implemented as a modular monolith with bounded-context modules composed by `ACC.Host` and founded on `ACC.BuildingBlocks`.
 
+## Current Capabilities
+
+ACC.NET currently includes early support for:
+
+- registering and authenticating users
+- verifying and resending email verification
+- creating accounting subjects
+- assigning authority roles
+- opening and closing fiscal periods
+- posting and viewing journal entries
+
+We are still in an early phase, more capabilities will be added incrementally over time.
+
 ## Repository Structure
 
 ```text
 src/
 ├─ ACC.AccountingSubject
-├─ ACC.Host
-├─ ACC.Ledger
-├─ ACC.Identity
+├─ ACC.Application
 ├─ ACC.Authority
+├─ ACC.BuildingBlocks
 ├─ ACC.Evidence
+├─ ACC.Host
+├─ ACC.Identity
+├─ ACC.Ledger
 ├─ ACC.Reporting
-├─ ACC.VAT
-└─ ACC.BuildingBlocks
+└─ ACC.VAT
 
 tests/
+├─ ACC.AccountingSubject.Tests
+├─ ACC.Application.Tests
+├─ ACC.Authority.Tests
+├─ ACC.Evidence.Tests
+├─ ACC.Identity.Tests
 ├─ ACC.Ledger.Tests
-└─ ...
+├─ ACC.Reporting.Tests
+└─ ACC.VAT.Tests
 ```
+
+
 
 ## Requirements
 
@@ -94,15 +99,6 @@ dotnet test acc-dotnet.slnx
 ```bash
 dotnet run --project src/ACC.Host/ACC.Host.csproj
 ```
-
-## Design Philosophy
-
-ACC.NET follows these principles:
-
-- semantic domain discovery
-- simplicity over complexity
-- scaling only when needed
-- full test coverage
 
 ## License
 

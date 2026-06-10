@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <ProjectReference Include="../ACC.AccountingSubject/ACC.AccountingSubject.csproj" />
+    <ProjectReference Include="../ACC.Authority/ACC.Authority.csproj" />
+  </ItemGroup>
+</Project>

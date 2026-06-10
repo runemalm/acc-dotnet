@@ -1,0 +1,52 @@
+@host = http://localhost:5000
+@accountingSubjectId = 11111111-1111-1111-1111-111111111111
+
+### OpenAPI document
+GET {{host}}/openapi/v1.json
+
+### Post balanced journal entry
+POST {{host}}/ledger/journal-entries
+Content-Type: application/json
+
+{
+  "accountingSubjectId": "{{accountingSubjectId}}",
+  "accountingDate": "2026-06-06",
+  "description": "Initial capital contribution",
+  "lines": [
+    {
+      "account": "Cash",
+      "debit": 1000,
+      "credit": 0
+    },
+    {
+      "account": "Owner Equity",
+      "debit": 0,
+      "credit": 1000
+    }
+  ]
+}
+
+### Get journal entry
+GET {{host}}/ledger/journal-entries/11111111-1111-1111-1111-111111111111
+
+### Post unbalanced journal entry
+POST {{host}}/ledger/journal-entries
+Content-Type: application/json
+
+{
+  "accountingSubjectId": "{{accountingSubjectId}}",
+  "accountingDate": "2026-06-06",
+  "description": "Unbalanced test",
+  "lines": [
+    {
+      "account": "Cash",
+      "debit": 1000,
+      "credit": 0
+    },
+    {
+      "account": "Owner Equity",
+      "debit": 0,
+      "credit": 900
+    }
+  ]
+}

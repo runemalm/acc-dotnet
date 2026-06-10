@@ -60,12 +60,11 @@ Current working map:
 ```text
 Institutional Foundation
 ├─ Identity
-├─ Organization
 ├─ Authority
-├─ Governance
 └─ Accountability
 
 Accounting
+├─ AccountingSubject
 ├─ Ledger
 ├─ Evidence
 ├─ Reporting
@@ -105,7 +104,7 @@ Register Identity
     -> Identity
 
 Close Fiscal Period
-    -> Governance
+    -> Ledger
 ```
 
 When implementing a use case:
@@ -187,9 +186,7 @@ ACC.Evidence
 ACC.Reporting
 ACC.VAT
 ACC.Identity
-ACC.Organization
 ACC.Authority
-ACC.Governance
 ```
 
 Tests should be placed under:
@@ -199,6 +196,38 @@ ACC.<SemanticCenter>.Tests
 ```
 
 within the `tests/` directory.
+
+---
+
+## Module READMEs
+
+Each bounded context module may include a `README.md` at its project root.
+
+A module README is a semantic catalog indexed by DDD/CQRS building blocks. It should help developers move between domain understanding and the code that implements it.
+
+Use software architecture terms for the catalog structure, and semantic or institutional language for the descriptions inside each entry.
+
+Recommended structure:
+
+```text
+Purpose
+Ontology Diagram
+Aggregates
+Use Cases
+Events
+Invariants
+```
+
+These sections describe the meaning behind the code, not the mechanics of the code.
+
+They should answer:
+
+```text
+Which concepts exist in this module?
+What do they mean?
+How do they relate?
+Where should a developer look in the code?
+```
 
 ---
 

@@ -1,22 +1,23 @@
 <Solution>
   <Folder Name="/src/">
-    <Project Path="src/ACC.API/ACC.API.csproj" />
+    <Project Path="src/ACC.AccountingSubject/ACC.AccountingSubject.csproj" />
+    <Project Path="src/ACC.Application/ACC.Application.csproj" />
     <Project Path="src/ACC.Authority/ACC.Authority.csproj" />
+    <Project Path="src/ACC.BuildingBlocks/ACC.BuildingBlocks.csproj" />
     <Project Path="src/ACC.Evidence/ACC.Evidence.csproj" />
-    <Project Path="src/ACC.Governance/ACC.Governance.csproj" />
+    <Project Path="src/ACC.Host/ACC.Host.csproj" />
     <Project Path="src/ACC.Identity/ACC.Identity.csproj" />
     <Project Path="src/ACC.Ledger/ACC.Ledger.csproj" />
-    <Project Path="src/ACC.Organization/ACC.Organization.csproj" />
     <Project Path="src/ACC.Reporting/ACC.Reporting.csproj" />
     <Project Path="src/ACC.VAT/ACC.VAT.csproj" />
   </Folder>
   <Folder Name="/tests/">
+    <Project Path="tests/ACC.AccountingSubject.Tests/ACC.AccountingSubject.Tests.csproj" />
+    <Project Path="tests/ACC.Application.Tests/ACC.Application.Tests.csproj" />
     <Project Path="tests/ACC.Authority.Tests/ACC.Authority.Tests.csproj" />
     <Project Path="tests/ACC.Evidence.Tests/ACC.Evidence.Tests.csproj" />
-    <Project Path="tests/ACC.Governance.Tests/ACC.Governance.Tests.csproj" />
     <Project Path="tests/ACC.Identity.Tests/ACC.Identity.Tests.csproj" />
     <Project Path="tests/ACC.Ledger.Tests/ACC.Ledger.Tests.csproj" />
-    <Project Path="tests/ACC.Organization.Tests/ACC.Organization.Tests.csproj" />
     <Project Path="tests/ACC.Reporting.Tests/ACC.Reporting.Tests.csproj" />
     <Project Path="tests/ACC.VAT.Tests/ACC.VAT.Tests.csproj" />
   </Folder>

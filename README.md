@@ -1,52 +1,37 @@
 # ACC.NET
 
-An accounting application.
-
-Built on .NET using domain-driven design principles.
+An accounting system written in .NET using Domain-Driven Design.
 
 ## Status
 
-Early development.
+ACC.NET is under active development.
 
-The project is currently focused on domain discovery and implementation of the core accounting domain.
+Current focus:
 
-The immediate objective is to develop a minimal viable product containing a small set of essential accounting use cases.
+- Discover the domain.
+- Set the architecture and design principles.
+- Scaffold the project.
+- Implement a minimal set of essential accounting use cases for an MVP.
 
-## Goals
+## Domain Model
 
-* Build a practical accounting application.
-* Apply Domain-Driven Design principles throughout the codebase.
-* Maintain a clear ubiquitous language.
-* Keep the architecture aligned with the semantics of the business domain.
-* Favor simplicity and evolvability over premature optimization.
-
-## Architecture
-
-ACC.NET is implemented as a modular monolith. Modules are logical boundaries for
-language, domain model, business rules, and use cases; they are not deployment
-boundaries.
-
-The current architectural map is exploratory. It distinguishes broad subdomains
-from the bounded contexts being discovered and implemented inside them.
+The diagram below illustrates the subdomains, bounded contexts, and relationships between them.
 
 ```mermaid
 flowchart TB
-    API["ACC.API\nProduct API"]
-    Product["ACC.NET Product\nModular Monolith"]
+    Product["ACC.NET\nModular Monolith"]
 
-    API --> Product
     Product --> InstitutionalFoundation["Institutional Foundation"]
     Product --> Accounting["Accounting"]
     Product --> Taxation["Taxation"]
 
     subgraph IF["Institutional Foundation Subdomain"]
         Identity["Identity\nBounded Context"]
-        Organization["Organization\nBounded Context"]
         Authority["Authority\nBounded Context"]
-        Governance["Governance\nBounded Context"]
     end
 
     subgraph AC["Accounting Subdomain"]
+        AccountingSubject["Accounting Subject\nBounded Context"]
         Ledger["Ledger\nBounded Context"]
         Evidence["Evidence\nBounded Context"]
         Reporting["Reporting\nBounded Context"]
@@ -57,35 +42,68 @@ flowchart TB
     end
 
     Evidence -->|supports recorded facts| Ledger
-    Ledger -->|projects accounting state| Reporting
+    Ledger -->|provides accounting state| Reporting
     VAT -->|produces tax accounting facts| Ledger
+    AccountingSubject -->|defines accounting scope| Ledger
     Identity -->|identifies actors| Authority
-    Organization -->|grounds institutional roles| Authority
-    Governance -->|sets institutional rules| Authority
-    Governance -->|governs fiscal continuity| Ledger
     Authority -->|authorizes acts| Ledger
     Authority -->|authorizes declarations| VAT
 ```
 
-Bounded contexts collaborate through explicit contracts and well-defined
-dependencies. Deployment boundaries are intentionally deferred until justified by
-business or operational needs.
+## Architecture
 
-## Domain-Driven Design
+ACC.NET is implemented as a modular monolith with bounded-context modules composed by `ACC.Host` and founded on `ACC.BuildingBlocks`.
 
-ACC.NET follows Domain-Driven Design (DDD) principles.
+## Repository Structure
 
-Particular emphasis is placed on:
+```text
+src/
+├─ ACC.AccountingSubject
+├─ ACC.Host
+├─ ACC.Ledger
+├─ ACC.Identity
+├─ ACC.Authority
+├─ ACC.Evidence
+├─ ACC.Reporting
+├─ ACC.VAT
+└─ ACC.BuildingBlocks
 
-* Strategic Design
-* Bounded Contexts
-* Ubiquitous Language
-* Rich Domain Models
-* Explicit Domain Boundaries
-* Continuous Domain Discovery
+tests/
+├─ ACC.Ledger.Tests
+└─ ...
+```
 
-The architecture is expected to evolve as domain understanding improves.
+## Requirements
+
+- .NET SDK 10
+
+## Build
+
+```bash
+dotnet build acc-dotnet.slnx
+```
+
+## Test
+
+```bash
+dotnet test acc-dotnet.slnx
+```
+
+## Run
+
+```bash
+dotnet run --project src/ACC.Host/ACC.Host.csproj
+```
+
+## Design Philosophy
+
+ACC.NET follows these principles:
+
+- semantic domain discovery
+- simplicity over complexity
+- scaling only when needed
+- full test coverage
 
 ## License
 
-See the LICENSE file for details.
+See [LICENSE](LICENSE) for details.

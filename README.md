@@ -10,27 +10,37 @@ Current focus is on implementing a minimal set of use cases for a minimum accoun
 
 ## Domain Model
 
-The diagram below summarizes the current semantic model of subdomains, bounded contexts, and relationships between them.
+The diagram below summarizes the current semantic model of subdomains, bounded contexts, and relationships between them. Solid nodes represent currently implemented contexts. Dashed nodes represent planned or placeholder contexts.
 
 ```mermaid
 flowchart TB
-    subgraph IF["Identity & Access"]
+    subgraph IF["Identity & Access Subdomain"]
         Identity["Identity"]
         Authority["Authority"]
+        Accountability["Accountability"]
     end
 
-    subgraph AC["Accounting"]
+    subgraph AC["Accounting Subdomain"]
         AccountingSubject["Accounting Subject"]
         Ledger["Ledger"]
         Evidence["Evidence"]
         Reporting["Reporting"]
+        Receivables["Receivables"]
+        Payables["Payables"]
     end
 
-    Evidence -->|supports recorded facts| Ledger
-    Ledger -->|provides accounting state| Reporting
+    subgraph TX["Taxation Subdomain"]
+        VAT["VAT"]
+        TaxDeclarations["Tax Declarations"]
+    end
+
     AccountingSubject -->|defines accounting scope| Ledger
-    Authority -->|assigns roles to users| Identity
+    Authority -->|requires recognized users from| Identity
+    Authority -->|requires recognized subjects from| AccountingSubject
     Authority -->|authorizes acts| Ledger
+
+    classDef planned stroke-dasharray: 5 5,color:#666,stroke:#999,fill:#fff
+    class Accountability,Evidence,Reporting,Receivables,Payables,VAT,TaxDeclarations planned
 ```
 
 ## Architecture
@@ -44,7 +54,9 @@ ACC.NET currently includes early support for:
 - registering and authenticating users
 - verifying and resending email verification
 - creating accounting subjects
-- assigning authority roles
+- establishing initial owner authority
+- assigning and revoking authority roles
+- viewing user roles
 - opening and closing fiscal periods
 - posting and viewing journal entries
 

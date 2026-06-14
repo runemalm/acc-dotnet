@@ -1,9 +1,23 @@
+using ACC.AccountingSubject.Application.Ports.ReadModels.AccountingSubject;
 using ACC.AccountingSubject.Domain.Aggregates;
+using ACC.AccountingSubject.Infrastructure.ReadModels.AccountingSubject;
 
 namespace ACC.AccountingSubject.Application.UseCases.CreateAccountingSubject;
 
 public sealed class CreateAccountingSubjectHandler
 {
+    private readonly IAccountingSubjectStore accountingSubjects;
+
+    public CreateAccountingSubjectHandler()
+        : this(new InMemoryAccountingSubjectStore())
+    {
+    }
+
+    public CreateAccountingSubjectHandler(IAccountingSubjectStore accountingSubjects)
+    {
+        this.accountingSubjects = accountingSubjects;
+    }
+
     public CreateAccountingSubjectResult Handle(CreateAccountingSubjectCommand command)
     {
         ArgumentNullException.ThrowIfNull(command);
@@ -17,7 +31,15 @@ public sealed class CreateAccountingSubjectHandler
             command.AccountingMethod,
             command.VatReportingPeriod);
 
-        // TODO: Persist the created accounting subject.
+        accountingSubjects.Save(new AccountingSubjectView(
+            accountingSubject.Id,
+            accountingSubject.Name,
+            accountingSubject.OrganizationNumber,
+            accountingSubject.Type,
+            accountingSubject.Country,
+            accountingSubject.AccountingMethod,
+            accountingSubject.VatReportingPeriod));
+
         return new CreateAccountingSubjectResult(accountingSubject.Id);
     }
 }

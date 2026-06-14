@@ -4,7 +4,7 @@ The **Application** module coordinates workflows that do not naturally belong to
 
 It does not own core domain concepts. Instead, it composes bounded-context use cases into larger application workflows.
 
-The current application workflow lets an already registered **User** complete onboarding by creating an **Accounting Subject** and receiving the **Owner** role for it.
+The current application workflow lets an already registered **User** complete onboarding by creating an **Accounting Subject** and establishing the founding **Owner** role for it.
 
 ## Ontology Diagram
 
@@ -18,14 +18,14 @@ flowchart LR
     Owner["Owner"]
 
     CreateAccountingSubject["CreateAccountingSubject"]
-    AssignRole["AssignRole"]
+    EstablishInitialOwner["EstablishInitialOwner"]
 
     CompleteOnboarding -->|for existing| User
     CompleteOnboarding -->|coordinates| CreateAccountingSubject
-    CompleteOnboarding -->|coordinates| AssignRole
+    CompleteOnboarding -->|coordinates| EstablishInitialOwner
 
     CreateAccountingSubject -->|creates| AccountingSubject
-    AssignRole -->|grants| Owner
+    EstablishInitialOwner -->|establishes| Owner
     Owner -->|for| AccountingSubject
     Owner -->|to| User
 ```
@@ -38,7 +38,7 @@ No aggregates are owned by this module.
 
 | Use Case | Description |
 | --- | --- |
-| CompleteOnboarding | Completes onboarding for an existing user by creating an accounting subject and assigning the Owner role. |
+| CompleteOnboarding | Completes onboarding for an existing user by creating an accounting subject and establishing the founding Owner role. |
 
 ## Events
 

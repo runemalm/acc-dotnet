@@ -1,0 +1,82 @@
+using ACC.Authority.Application.UseCases.AssignRole;
+using ACC.Authority.Application.UseCases.RevokeRole;
+using ACC.Authority.Domain.Aggregates;
+using ACC.Authority.Tests.TestKit;
+using Xunit;
+
+namespace ACC.Authority.Tests.UseCases;
+
+public sealed class RevokeRoleTests
+{
+    [Fact]
+    public void GivenActiveRoleAssignment_WhenRevokingRole_ThenRoleRevoked()
+    {
+        var context = new AuthorityUseCaseTestContext();
+        var assigned = AssignOwnerRole(context);
+        var revokedAt = DateTimeOffset.UtcNow;
+
+        context.RevokeRole.Handle(
+            new RevokeRoleCommand(assigned.ActorUserId, assigned.RoleAssignmentId),
+            revokedAt);
+
+        var roleAssignment = context.FindRoleAssignment(assigned.RoleAssignmentId);
+
+        Assert.NotNull(roleAssignment);
+        Assert.Equal(revokedAt, roleAssignment.RevokedAt);
+        Assert.False(roleAssignment.IsActive);
+    }
+
+    [Fact]
+    public void GivenRevokedRoleAssignment_WhenRevokingRole_ThenRoleAssignmentMustBeActiveToRevokeViolation()
+    {
+        var context = new AuthorityUseCaseTestContext();
+        var assigned = AssignOwnerRole(context);
+
+        context.RevokeRole.Handle(
+            new RevokeRoleCommand(assigned.ActorUserId, assigned.RoleAssignmentId),
+            DateTimeOffset.UtcNow);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            context.RevokeRole.Handle(
+                new RevokeRoleCommand(assigned.ActorUserId, assigned.RoleAssignmentId),
+                DateTimeOffset.UtcNow));
+
+        Assert.Equal("A role assignment must be active before it can be revoked.", exception.Message);
+    }
+
+    [Fact]
+    public void GivenActorWithoutRevokeRolePower_WhenRevokingRole_ThenActorMustHavePowerViolation()
+    {
+        var context = new AuthorityUseCaseTestContext();
+        var assigned = AssignOwnerRole(context);
+        var actorUserId = Guid.NewGuid();
+        context.RecognizeUser(actorUserId);
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            context.RevokeRole.Handle(
+                new RevokeRoleCommand(actorUserId, assigned.RoleAssignmentId),
+                DateTimeOffset.UtcNow));
+
+        Assert.Contains("must have RevokeRole power", exception.Message);
+    }
+
+    private static AssignedRole AssignOwnerRole(AuthorityUseCaseTestContext context)
+    {
+        var userId = Guid.NewGuid();
+        var accountingSubjectId = Guid.NewGuid();
+        var actorUserId = context.EstablishOwner(accountingSubjectId);
+        context.RecognizeUser(userId);
+
+        var result = context.AssignRole.Handle(
+            new AssignRoleCommand(
+                actorUserId,
+                userId,
+                accountingSubjectId,
+                Role.Owner),
+            DateTimeOffset.UtcNow);
+
+        return new AssignedRole(result.RoleAssignmentId, actorUserId);
+    }
+
+    private sealed record AssignedRole(Guid RoleAssignmentId, Guid ActorUserId);
+}

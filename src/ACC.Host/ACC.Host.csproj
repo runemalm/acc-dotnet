@@ -4,6 +4,8 @@
     <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.3" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="../ACC.AccountingSubject/ACC.AccountingSubject.csproj" />
+    <ProjectReference Include="../ACC.Authority/ACC.Authority.csproj" />
     <ProjectReference Include="../ACC.Identity/ACC.Identity.csproj" />
     <ProjectReference Include="../ACC.Ledger/ACC.Ledger.csproj" />
   </ItemGroup>

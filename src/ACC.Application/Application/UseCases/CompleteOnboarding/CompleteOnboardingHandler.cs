@@ -1,20 +1,19 @@
 using ACC.AccountingSubject.Application.UseCases.CreateAccountingSubject;
-using ACC.Authority.Application.UseCases.AssignRole;
-using ACC.Authority.Domain.Aggregates;
+using ACC.Authority.Application.UseCases.EstablishInitialOwner;
 
 namespace ACC.Application.Application.UseCases.CompleteOnboarding;
 
 public sealed class CompleteOnboardingHandler
 {
     private readonly CreateAccountingSubjectHandler createAccountingSubject;
-    private readonly AssignRoleHandler assignRole;
+    private readonly EstablishInitialOwnerHandler establishInitialOwner;
 
     public CompleteOnboardingHandler(
         CreateAccountingSubjectHandler createAccountingSubject,
-        AssignRoleHandler assignRole)
+        EstablishInitialOwnerHandler establishInitialOwner)
     {
         this.createAccountingSubject = createAccountingSubject;
-        this.assignRole = assignRole;
+        this.establishInitialOwner = establishInitialOwner;
     }
 
     public CompleteOnboardingResult Handle(CompleteOnboardingCommand command)
@@ -29,10 +28,9 @@ public sealed class CompleteOnboardingHandler
             command.AccountingMethod,
             command.VatReportingPeriod));
 
-        assignRole.Handle(new AssignRoleCommand(
+        establishInitialOwner.Handle(new EstablishInitialOwnerCommand(
             command.UserId,
-            accountingSubject.AccountingSubjectId,
-            Role.Owner));
+            accountingSubject.AccountingSubjectId), DateTimeOffset.UtcNow);
 
         return new CompleteOnboardingResult(accountingSubject.AccountingSubjectId);
     }

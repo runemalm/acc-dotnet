@@ -1,1 +1,8 @@
-<Project Sdk="Microsoft.NET.Sdk" />
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../ACC.AccountingSubject/ACC.AccountingSubject.csproj" />
+    <ProjectReference Include="../ACC.BuildingBlocks/ACC.BuildingBlocks.csproj" />
+    <ProjectReference Include="../ACC.Identity/ACC.Identity.csproj" />
+  </ItemGroup>
+</Project>

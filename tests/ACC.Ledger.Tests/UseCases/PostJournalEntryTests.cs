@@ -21,6 +21,7 @@ public sealed class PostJournalEntryTests
                 new DateOnly(2026, 1, 1),
                 new DateOnly(2026, 12, 31)),
             DateTimeOffset.UtcNow);
+        context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
         var result = context.PostJournalEntry.Handle(
             BalancedJournalEntry(accountingSubjectId, accountingDate),
@@ -58,6 +59,7 @@ public sealed class PostJournalEntryTests
                 new DateOnly(2026, 1, 1),
                 new DateOnly(2026, 12, 31)),
             DateTimeOffset.UtcNow);
+        context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
         var command = new PostJournalEntryCommand(
             accountingSubjectId,
@@ -91,6 +93,7 @@ public sealed class PostJournalEntryTests
         context.CloseFiscalPeriod.Handle(
             new CloseFiscalPeriodCommand(opened.FiscalPeriodId),
             DateTimeOffset.UtcNow);
+        context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
         var exception = Assert.Throws<InvalidOperationException>(() =>
             context.PostJournalEntry.Handle(
@@ -98,6 +101,51 @@ public sealed class PostJournalEntryTests
                 DateTimeOffset.UtcNow));
 
         Assert.Contains("fiscal period is not open", exception.Message);
+    }
+
+    [Fact]
+    public void GivenUnrecognizedAccount_WhenPosting_ThenPostingAccountMustBeRecognizedViolation()
+    {
+        var context = new LedgerUseCaseTestContext();
+        var accountingSubjectId = Guid.NewGuid();
+        var accountingDate = new DateOnly(2026, 6, 10);
+        context.OpenFiscalPeriod.Handle(
+            new OpenFiscalPeriodCommand(
+                accountingSubjectId,
+                new DateOnly(2026, 1, 1),
+                new DateOnly(2026, 12, 31)),
+            DateTimeOffset.UtcNow);
+        context.MakeAccountsActive(accountingSubjectId, "Owner Equity");
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            context.PostJournalEntry.Handle(
+                BalancedJournalEntry(accountingSubjectId, accountingDate),
+                DateTimeOffset.UtcNow));
+
+        Assert.Contains("Account Cash must be recognized", exception.Message);
+    }
+
+    [Fact]
+    public void GivenInactiveAccount_WhenPosting_ThenPostingAccountMustBeActiveViolation()
+    {
+        var context = new LedgerUseCaseTestContext();
+        var accountingSubjectId = Guid.NewGuid();
+        var accountingDate = new DateOnly(2026, 6, 10);
+        context.OpenFiscalPeriod.Handle(
+            new OpenFiscalPeriodCommand(
+                accountingSubjectId,
+                new DateOnly(2026, 1, 1),
+                new DateOnly(2026, 12, 31)),
+            DateTimeOffset.UtcNow);
+        context.MakeAccountInactive(accountingSubjectId, "Cash");
+        context.MakeAccountsActive(accountingSubjectId, "Owner Equity");
+
+        var exception = Assert.Throws<InvalidOperationException>(() =>
+            context.PostJournalEntry.Handle(
+                BalancedJournalEntry(accountingSubjectId, accountingDate),
+                DateTimeOffset.UtcNow));
+
+        Assert.Contains("Account Cash must be active", exception.Message);
     }
 
     private static PostJournalEntryCommand BalancedJournalEntry(

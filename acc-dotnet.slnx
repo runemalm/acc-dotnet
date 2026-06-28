@@ -4,6 +4,7 @@
     <Project Path="src/ACC.Application/ACC.Application.csproj" />
     <Project Path="src/ACC.Authority/ACC.Authority.csproj" />
     <Project Path="src/ACC.BuildingBlocks/ACC.BuildingBlocks.csproj" />
+    <Project Path="src/ACC.ChartOfAccounts/ACC.ChartOfAccounts.csproj" />
     <Project Path="src/ACC.Evidence/ACC.Evidence.csproj" />
     <Project Path="src/ACC.Host/ACC.Host.csproj" />
     <Project Path="src/ACC.Identity/ACC.Identity.csproj" />
@@ -15,10 +16,15 @@
     <Project Path="tests/ACC.AccountingSubject.Tests/ACC.AccountingSubject.Tests.csproj" />
     <Project Path="tests/ACC.Application.Tests/ACC.Application.Tests.csproj" />
     <Project Path="tests/ACC.Authority.Tests/ACC.Authority.Tests.csproj" />
+    <Project Path="tests/ACC.ChartOfAccounts.Tests/ACC.ChartOfAccounts.Tests.csproj" />
     <Project Path="tests/ACC.Evidence.Tests/ACC.Evidence.Tests.csproj" />
     <Project Path="tests/ACC.Identity.Tests/ACC.Identity.Tests.csproj" />
     <Project Path="tests/ACC.Ledger.Tests/ACC.Ledger.Tests.csproj" />
     <Project Path="tests/ACC.Reporting.Tests/ACC.Reporting.Tests.csproj" />
     <Project Path="tests/ACC.VAT.Tests/ACC.VAT.Tests.csproj" />
+  </Folder>
+  <Folder Name="/tools/">
+    <Project Path="tools/ACC.Bas.Tooling/ACC.Bas.Tooling.csproj" />
+    <Project Path="tools/ACC.Bas.Tooling.Tests/ACC.Bas.Tooling.Tests.csproj" />
   </Folder>
 </Solution>

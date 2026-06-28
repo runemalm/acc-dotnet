@@ -22,6 +22,7 @@ flowchart TB
 
     subgraph AC["Accounting Subdomain"]
         AccountingSubject["Accounting Subject"]
+        ChartOfAccounts["Chart of Accounts"]
         Ledger["Ledger"]
         Evidence["Evidence"]
         Reporting["Reporting"]
@@ -35,8 +36,11 @@ flowchart TB
     end
 
     AccountingSubject -->|defines accounting scope| Ledger
+    AccountingSubject -->|adopts| ChartOfAccounts
+    ChartOfAccounts -->|defines accounts for| Ledger
     Authority -->|requires recognized users from| Identity
     Authority -->|requires recognized subjects from| AccountingSubject
+    Authority -->|authorizes acts| ChartOfAccounts
     Authority -->|authorizes acts| Ledger
 
     classDef planned stroke-dasharray: 5 5,color:#666,stroke:#999,fill:#fff
@@ -53,12 +57,14 @@ ACC.NET currently includes early support for:
 
 - registering and authenticating users
 - verifying and resending email verification
+- completing onboarding with a selected chart-of-accounts template
 - creating accounting subjects
+- adopting and managing charts of accounts from configured templates
 - establishing initial owner authority
 - assigning and revoking authority roles
 - viewing user roles
 - opening and closing fiscal periods
-- posting and viewing journal entries
+- posting journal entries to active accounts in the operative chart and viewing them
 
 We are still in an early phase, more capabilities will be added incrementally over time.
 
@@ -70,6 +76,7 @@ src/
 ├─ ACC.Application
 ├─ ACC.Authority
 ├─ ACC.BuildingBlocks
+├─ ACC.ChartOfAccounts
 ├─ ACC.Evidence
 ├─ ACC.Host
 ├─ ACC.Identity
@@ -81,11 +88,16 @@ tests/
 ├─ ACC.AccountingSubject.Tests
 ├─ ACC.Application.Tests
 ├─ ACC.Authority.Tests
+├─ ACC.ChartOfAccounts.Tests
 ├─ ACC.Evidence.Tests
 ├─ ACC.Identity.Tests
 ├─ ACC.Ledger.Tests
 ├─ ACC.Reporting.Tests
 └─ ACC.VAT.Tests
+
+tools/
+├─ ACC.Bas.Tooling
+└─ ACC.Bas.Tooling.Tests
 ```
 
 

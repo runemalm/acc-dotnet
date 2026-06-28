@@ -62,6 +62,8 @@ flowchart LR
 | --- | --- |
 | AssignRole | The capacity to grant a role for an accounting subject. |
 | RevokeRole | The capacity to end a role assignment for an accounting subject. |
+| AdoptChartOfAccounts | The capacity to establish an operative chart of accounts for an accounting subject. |
+| ManageChartOfAccounts | The capacity to add, deactivate, and reactivate accounts in an operative chart. |
 
 ## Events
 

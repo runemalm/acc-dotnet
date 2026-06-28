@@ -20,6 +20,7 @@ public sealed class PostJournalEntryEndpointTests
             accountingSubjectId,
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 12, 31));
+        context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
         var response = await context.Client.PostAsJsonAsync(
             "/ledger/journal-entries",
@@ -45,6 +46,7 @@ public sealed class PostJournalEntryEndpointTests
             accountingSubjectId,
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 12, 31));
+        context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
         var response = await context.Client.PostAsJsonAsync(
             "/ledger/journal-entries",
@@ -63,6 +65,28 @@ public sealed class PostJournalEntryEndpointTests
         Assert.NotNull(problem);
         Assert.Equal((int)HttpStatusCode.BadRequest, problem.Status);
         Assert.Contains("Journal entry must balance.", problem.Detail);
+    }
+
+    [Fact]
+    public async Task PostJournalEntry_WithUnrecognizedAccount_ReturnsBadRequest()
+    {
+        await using var context = await LedgerApiTestContext.Create();
+        var accountingSubjectId = Guid.NewGuid();
+        var accountingDate = new DateOnly(2026, 6, 10);
+        context.OpenFiscalPeriod(
+            accountingSubjectId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 12, 31));
+        context.MakeAccountsActive(accountingSubjectId, "Owner Equity");
+
+        var response = await context.Client.PostAsJsonAsync(
+            "/ledger/journal-entries",
+            BalancedJournalEntry(accountingSubjectId, accountingDate));
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Contains("Account Cash must be recognized", problem.Detail);
     }
 
     private static PostJournalEntryCommand BalancedJournalEntry(

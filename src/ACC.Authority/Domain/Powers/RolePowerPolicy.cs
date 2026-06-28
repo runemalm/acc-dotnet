@@ -9,7 +9,9 @@ public sealed class RolePowerPolicy
         {
             Role.Owner => power is
                 Power.AssignRole or
-                Power.RevokeRole,
+                Power.RevokeRole or
+                Power.AdoptChartOfAccounts or
+                Power.ManageChartOfAccounts,
             _ => false
         };
 }

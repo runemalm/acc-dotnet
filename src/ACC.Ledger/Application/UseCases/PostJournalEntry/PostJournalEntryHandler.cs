@@ -1,7 +1,9 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.Ledger.Application.Ports.ChartOfAccounts;
 using ACC.Ledger.Application.Ports.ReadModels.FiscalPeriod;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Domain.Events;
+using ACC.Ledger.Domain.Invariants;
 using ACC.Ledger.Infrastructure.ReadModels.JournalEntry;
 
 namespace ACC.Ledger.Application.UseCases.PostJournalEntry;
@@ -11,17 +13,20 @@ public sealed class PostJournalEntryHandler
     private readonly EventSourcedRepository<JournalEntry> journalEntries;
     private readonly EventSourcedRepository<FiscalPeriod> fiscalPeriods;
     private readonly IFiscalPeriodStore fiscalPeriodStore;
+    private readonly IAccountAvailabilityPort accountAvailability;
     private readonly JournalEntryProjection journalEntryProjection;
 
     public PostJournalEntryHandler(
         EventSourcedRepository<JournalEntry> journalEntries,
         EventSourcedRepository<FiscalPeriod> fiscalPeriods,
         IFiscalPeriodStore fiscalPeriodStore,
+        IAccountAvailabilityPort accountAvailability,
         JournalEntryProjection journalEntryProjection)
     {
         this.journalEntries = journalEntries;
         this.fiscalPeriods = fiscalPeriods;
         this.fiscalPeriodStore = fiscalPeriodStore;
+        this.accountAvailability = accountAvailability;
         this.journalEntryProjection = journalEntryProjection;
     }
 
@@ -40,6 +45,22 @@ public sealed class PostJournalEntryHandler
                 $"No fiscal period contains accounting date {command.AccountingDate}.");
 
         var fiscalPeriod = fiscalPeriods.Load(FiscalPeriodStream(fiscalPeriodView.FiscalPeriodId));
+
+        foreach (var accountNumber in lines
+                     .Select(line => line.Account)
+                     .Distinct(StringComparer.Ordinal))
+        {
+            var availability = accountAvailability.GetAvailability(
+                command.AccountingSubjectId,
+                accountNumber);
+            PostingAccountMustBeRecognized.Ensure(
+                accountNumber,
+                availability != PostingAccountAvailability.Unrecognized);
+            PostingAccountMustBeActive.Ensure(
+                accountNumber,
+                availability == PostingAccountAvailability.Active);
+        }
+
         var journalEntryId = Guid.NewGuid();
 
         var journalEntry = JournalEntry.Posted(

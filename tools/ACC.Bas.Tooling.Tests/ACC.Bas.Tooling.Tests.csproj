@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <IsTestProject>true</IsTestProject>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.14.1" />
+    <PackageReference Include="xunit" Version="2.9.3" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="3.1.4" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="../ACC.Bas.Tooling/ACC.Bas.Tooling.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="../ACC.Bas.Tooling/Publications/Sources/2018/Kontoplan_K1_2018.xls">
+      <Link>Sources/Kontoplan_K1_2018.xls</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="../ACC.Bas.Tooling/Publications/Sources/2018/Kontoplan_K1_Mini_2018.xls">
+      <Link>Sources/Kontoplan_K1_Mini_2018.xls</Link>
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+</Project>

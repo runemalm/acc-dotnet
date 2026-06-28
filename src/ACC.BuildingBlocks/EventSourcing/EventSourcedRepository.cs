@@ -25,6 +25,17 @@ public sealed class EventSourcedRepository<TAggregate>
         return rehydrate(events);
     }
 
+    public TAggregate? Find(StreamId streamId)
+    {
+        ArgumentNullException.ThrowIfNull(streamId);
+
+        var storedEvents = eventStore.LoadStream(streamId);
+
+        return storedEvents.Count == 0
+            ? null
+            : rehydrate(storedEvents.Select(storedEvent => storedEvent.Data));
+    }
+
     public IReadOnlyList<StoredEvent> Save(StreamId streamId, TAggregate aggregate)
     {
         ArgumentNullException.ThrowIfNull(streamId);

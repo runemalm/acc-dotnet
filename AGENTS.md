@@ -65,6 +65,7 @@ Institutional Foundation
 
 Accounting
 ├─ AccountingSubject
+├─ ChartOfAccounts
 ├─ Ledger
 ├─ Evidence
 ├─ Reporting

@@ -1,0 +1,172 @@
+{
+  "id": "se:bas:k1-mini:2018",
+  "name": "BAS 2018 för K1 Mini",
+  "sourceArtifacts": [
+    {
+      "fileName": "Kontoplan_K1_2018.xls",
+      "sha256": "93f49b31cf6fb04f812d7fbf2b1e7cf22cfa15956d2b68434ab7668b52cc5df1"
+    },
+    {
+      "fileName": "Kontoplan_K1_Mini_2018.xls",
+      "sha256": "28298aa60a614de1e04d3ea8927c6141082530696c243b3795aafb898479afa9"
+    }
+  ],
+  "accounts": [
+    {
+      "number": "1000",
+      "name": "Immateriella anläggningstillgångar"
+    },
+    {
+      "number": "1110",
+      "name": "Byggnader"
+    },
+    {
+      "number": "1130",
+      "name": "Mark"
+    },
+    {
+      "number": "1150",
+      "name": "Markanläggningar"
+    },
+    {
+      "number": "1220",
+      "name": "Maskiner och inventarier"
+    },
+    {
+      "number": "1300",
+      "name": "Andelar"
+    },
+    {
+      "number": "1400",
+      "name": "Lager"
+    },
+    {
+      "number": "1500",
+      "name": "Kundfordringar"
+    },
+    {
+      "number": "1600",
+      "name": "Övriga fordringar"
+    },
+    {
+      "number": "1920",
+      "name": "PlusGiro"
+    },
+    {
+      "number": "2010",
+      "name": "Eget kapital, delägare 1"
+    },
+    {
+      "number": "2050",
+      "name": "Avsättning till expansionsfond"
+    },
+    {
+      "number": "2060",
+      "name": "Ersättningsfond"
+    },
+    {
+      "number": "2070",
+      "name": "Insatsemissioner, avbetalningsplan på skog, skogskonto, upphovsmannakonto"
+    },
+    {
+      "number": "2080",
+      "name": "Periodiseringsfonder"
+    },
+    {
+      "number": "2330",
+      "name": "Checkräkningskredit"
+    },
+    {
+      "number": "2390",
+      "name": "Övriga låneskulder"
+    },
+    {
+      "number": "2440",
+      "name": "Leverantörsskulder"
+    },
+    {
+      "number": "2610",
+      "name": "Utgående moms, 25 %"
+    },
+    {
+      "number": "2620",
+      "name": "Utgående moms, 12 %"
+    },
+    {
+      "number": "2630",
+      "name": "Utgående moms, 6 %"
+    },
+    {
+      "number": "2640",
+      "name": "Ingående moms"
+    },
+    {
+      "number": "2650",
+      "name": "Redovisningskonto för moms"
+    },
+    {
+      "number": "2900",
+      "name": "Övriga skulder"
+    },
+    {
+      "number": "3000",
+      "name": "Försäljning och utfört arbete samt övriga momspliktiga intäkter"
+    },
+    {
+      "number": "3100",
+      "name": "Momsfria intäkter"
+    },
+    {
+      "number": "3200",
+      "name": "Bil- och bostadsförmån m.m."
+    },
+    {
+      "number": "3700",
+      "name": "Lämnade rabatter, bonus etc."
+    },
+    {
+      "number": "3900",
+      "name": "Övriga rörelseintäkter"
+    },
+    {
+      "number": "4000",
+      "name": "Varor"
+    },
+    {
+      "number": "6900",
+      "name": "Övriga kostnader"
+    },
+    {
+      "number": "7000",
+      "name": "Löner till anställda"
+    },
+    {
+      "number": "7700",
+      "name": "Nedskrivningar"
+    },
+    {
+      "number": "7810",
+      "name": "Avskrivningar på immateriella anläggningstillgångar"
+    },
+    {
+      "number": "7820",
+      "name": "Avskrivningar på byggnader och markanläggningar"
+    },
+    {
+      "number": "7830",
+      "name": "Avskrivningar på maskiner och inventarier"
+    },
+    {
+      "number": "7980",
+      "name": "Ersättningsfonder"
+    },
+    {
+      "number": "8310",
+      "name": "Ränteintäkter och utdelningar"
+    },
+    {
+      "number": "8410",
+      "name": "Räntekostnader för skulder"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.EventSourcing.Memory;
+using ACC.ChartOfAccounts.Application.Ports.ReadModels.ChartOfAccounts;
+using ACC.ChartOfAccounts.Infrastructure.ReadModels.ChartOfAccounts;
 using ACC.Ledger.Application.Ports.ReadModels.FiscalPeriod;
 using ACC.Ledger.Application.Ports.ReadModels.JournalEntry;
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
@@ -8,6 +10,7 @@ using ACC.Ledger.Application.UseCases.PostJournalEntry;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Infrastructure.ReadModels.FiscalPeriod;
 using ACC.Ledger.Infrastructure.ReadModels.JournalEntry;
+using ACC.Ledger.Infrastructure.Adapters.ChartOfAccounts;
 
 namespace ACC.Ledger.Tests.TestKit;
 
@@ -15,6 +18,7 @@ internal sealed class LedgerUseCaseTestContext
 {
     private readonly InMemoryFiscalPeriodStore fiscalPeriodStore = new();
     private readonly InMemoryJournalEntryStore journalEntryStore = new();
+    private readonly InMemoryAccountStore accountStore = new();
 
     public LedgerUseCaseTestContext()
     {
@@ -30,6 +34,7 @@ internal sealed class LedgerUseCaseTestContext
 
         var fiscalPeriodProjection = new FiscalPeriodProjection(fiscalPeriodStore);
         var journalEntryProjection = new JournalEntryProjection(journalEntryStore);
+        var accountAvailability = new AccountAvailabilityAdapter(accountStore);
 
         OpenFiscalPeriod = new OpenFiscalPeriodHandler(
             fiscalPeriods,
@@ -43,6 +48,7 @@ internal sealed class LedgerUseCaseTestContext
             journalEntries,
             fiscalPeriods,
             fiscalPeriodStore,
+            accountAvailability,
             journalEntryProjection);
     }
 
@@ -60,4 +66,25 @@ internal sealed class LedgerUseCaseTestContext
 
     public JournalEntryView? FindJournalEntry(Guid journalEntryId) =>
         journalEntryStore.Find(journalEntryId);
+
+    public void MakeAccountsActive(Guid accountingSubjectId, params string[] accountNumbers)
+    {
+        foreach (var accountNumber in accountNumbers)
+        {
+            accountStore.Save(new AccountView(
+                Guid.NewGuid(),
+                accountingSubjectId,
+                accountNumber,
+                accountNumber,
+                IsActive: true));
+        }
+    }
+
+    public void MakeAccountInactive(Guid accountingSubjectId, string accountNumber) =>
+        accountStore.Save(new AccountView(
+            Guid.NewGuid(),
+            accountingSubjectId,
+            accountNumber,
+            accountNumber,
+            IsActive: false));
 }

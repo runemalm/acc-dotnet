@@ -1,3 +1,5 @@
+using ACC.ChartOfAccounts.Application.Ports.ReadModels.ChartOfAccounts;
+using ACC.ChartOfAccounts.Infrastructure.ReadModels.ChartOfAccounts;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -10,10 +12,15 @@ namespace ACC.Ledger.Tests.TestKit;
 public sealed class LedgerApiTestContext : IAsyncDisposable
 {
     private readonly WebApplication app;
+    private readonly InMemoryAccountStore accountStore;
 
-    private LedgerApiTestContext(WebApplication app, HttpClient client)
+    private LedgerApiTestContext(
+        WebApplication app,
+        HttpClient client,
+        InMemoryAccountStore accountStore)
     {
         this.app = app;
+        this.accountStore = accountStore;
         Client = client;
     }
 
@@ -22,10 +29,12 @@ public sealed class LedgerApiTestContext : IAsyncDisposable
     public static async Task<LedgerApiTestContext> Create()
     {
         var builder = WebApplication.CreateBuilder();
+        var accountStore = new InMemoryAccountStore();
 
         builder.WebHost.UseKestrel().UseUrls("http://127.0.0.1:0");
         builder.Services.AddLedgerApplication();
         builder.Services.AddLedgerMemoryPersistence();
+        builder.Services.AddSingleton<IAccountStore>(accountStore);
 
         var app = builder.Build();
 
@@ -45,7 +54,7 @@ public sealed class LedgerApiTestContext : IAsyncDisposable
             BaseAddress = new Uri(address)
         };
 
-        return new LedgerApiTestContext(app, client);
+        return new LedgerApiTestContext(app, client, accountStore);
     }
 
     public void OpenFiscalPeriod(Guid accountingSubjectId, DateOnly startsOn, DateOnly endsOn)
@@ -56,6 +65,19 @@ public sealed class LedgerApiTestContext : IAsyncDisposable
         handler.Handle(
             new OpenFiscalPeriodCommand(accountingSubjectId, startsOn, endsOn),
             DateTimeOffset.UtcNow);
+    }
+
+    public void MakeAccountsActive(Guid accountingSubjectId, params string[] accountNumbers)
+    {
+        foreach (var accountNumber in accountNumbers)
+        {
+            accountStore.Save(new AccountView(
+                Guid.NewGuid(),
+                accountingSubjectId,
+                accountNumber,
+                accountNumber,
+                IsActive: true));
+        }
     }
 
     public async ValueTask DisposeAsync()

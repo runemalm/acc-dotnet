@@ -1,5 +1,7 @@
 using ACC.AccountingSubject;
+using ACC.Application;
 using ACC.Authority;
+using ACC.ChartOfAccounts;
 using ACC.Identity;
 using ACC.Ledger;
 using Microsoft.OpenApi;
@@ -20,6 +22,8 @@ builder.Services.AddLedger(builder.Configuration);
 builder.Services.AddIdentity(builder.Configuration);
 builder.Services.AddAccountingSubject(builder.Configuration);
 builder.Services.AddAuthority(builder.Configuration);
+builder.Services.AddChartOfAccounts(builder.Configuration);
+builder.Services.AddApplication();
 
 var app = builder.Build();
 
@@ -29,5 +33,7 @@ app.UseSwaggerUI();
 app.MapLedger();
 app.MapIdentity();
 app.MapAuthority();
+app.MapChartOfAccounts();
+app.MapApplication();
 
 app.Run();

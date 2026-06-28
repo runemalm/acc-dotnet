@@ -1,0 +1,15 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <ItemGroup>
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
+    <ProjectReference Include="../ACC.AccountingSubject/ACC.AccountingSubject.csproj" />
+    <ProjectReference Include="../ACC.Authority/ACC.Authority.csproj" />
+    <ProjectReference Include="../ACC.BuildingBlocks/ACC.BuildingBlocks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Infrastructure/Resources/Templates/**/*.template.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      <TargetPath>ChartOfAccounts/Templates/%(RecursiveDir)%(Filename)%(Extension)</TargetPath>
+    </Content>
+  </ItemGroup>
+</Project>

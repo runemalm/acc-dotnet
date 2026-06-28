@@ -1,0 +1,3 @@
+namespace ACC.ChartOfAccounts.Application.UseCases.ViewChartOfAccountsTemplates;
+
+public sealed record ViewChartOfAccountsTemplatesQuery;

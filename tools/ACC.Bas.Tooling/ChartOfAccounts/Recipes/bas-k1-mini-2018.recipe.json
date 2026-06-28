@@ -1,0 +1,10 @@
+{
+  "id": "se:bas:k1-mini:2018",
+  "name": "BAS 2018 för K1 Mini",
+  "compiler": "bas-k1-mini-2018",
+  "inputs": {
+    "accountDefinitions": "../../Publications/Sources/2018/Kontoplan_K1_2018.xls",
+    "accountSelection": "../../Publications/Sources/2018/Kontoplan_K1_Mini_2018.xls"
+  },
+  "output": "../../../../src/ACC.ChartOfAccounts/Infrastructure/Resources/Templates/BAS/bas-k1-mini-2018.template.json"
+}

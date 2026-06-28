@@ -9,4 +9,5 @@ public sealed record CompleteOnboardingCommand(
     AccountingSubjectType AccountingSubjectType,
     Country Country,
     AccountingMethod AccountingMethod,
-    VatReportingPeriod VatReportingPeriod);
+    VatReportingPeriod VatReportingPeriod,
+    string ChartOfAccountsTemplateId);

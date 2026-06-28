@@ -20,6 +20,7 @@ public sealed class ViewJournalEntryEndpointTests
             accountingSubjectId,
             new DateOnly(2026, 1, 1),
             new DateOnly(2026, 12, 31));
+        context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
         var posted = await context.Client.PostAsJsonAsync(
             "/ledger/journal-entries",

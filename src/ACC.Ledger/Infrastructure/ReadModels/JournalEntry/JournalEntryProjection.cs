@@ -18,6 +18,7 @@ public sealed class JournalEntryProjection
 
         journalEntries.Save(new JournalEntryView(
             domainEvent.JournalEntryId,
+            domainEvent.AccountingSubjectId,
             domainEvent.AccountingDate,
             domainEvent.Description,
             domainEvent.Lines

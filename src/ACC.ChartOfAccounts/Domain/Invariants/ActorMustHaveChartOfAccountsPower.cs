@@ -1,3 +1,5 @@
+using ACC.BuildingBlocks.Authorization;
+
 namespace ACC.ChartOfAccounts.Domain.Invariants;
 
 public static class ActorMustHaveChartOfAccountsPower
@@ -6,7 +8,7 @@ public static class ActorMustHaveChartOfAccountsPower
     {
         if (!hasPower)
         {
-            throw new InvalidOperationException(
+            throw new AuthorizationDeniedException(
                 $"User {actorUserId} must have power to {act}.");
         }
     }

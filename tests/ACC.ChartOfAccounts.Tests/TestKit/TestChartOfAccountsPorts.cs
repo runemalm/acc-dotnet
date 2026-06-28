@@ -34,6 +34,7 @@ internal sealed class TestChartOfAccountsAuthorityPort : IChartOfAccountsAuthori
 {
     private readonly HashSet<(Guid UserId, Guid AccountingSubjectId)> adoptionPowers = [];
     private readonly HashSet<(Guid UserId, Guid AccountingSubjectId)> managementPowers = [];
+    private readonly HashSet<(Guid UserId, Guid AccountingSubjectId)> viewingPowers = [];
 
     public bool CanAdoptChartOfAccounts(Guid actorUserId, Guid accountingSubjectId) =>
         adoptionPowers.Contains((actorUserId, accountingSubjectId));
@@ -41,9 +42,15 @@ internal sealed class TestChartOfAccountsAuthorityPort : IChartOfAccountsAuthori
     public bool CanManageChartOfAccounts(Guid actorUserId, Guid accountingSubjectId) =>
         managementPowers.Contains((actorUserId, accountingSubjectId));
 
+    public bool CanViewChartOfAccounts(Guid actorUserId, Guid accountingSubjectId) =>
+        viewingPowers.Contains((actorUserId, accountingSubjectId));
+
     public void AllowAdoption(Guid actorUserId, Guid accountingSubjectId) =>
         adoptionPowers.Add((actorUserId, accountingSubjectId));
 
     public void AllowManagement(Guid actorUserId, Guid accountingSubjectId) =>
         managementPowers.Add((actorUserId, accountingSubjectId));
+
+    public void AllowViewing(Guid actorUserId, Guid accountingSubjectId) =>
+        viewingPowers.Add((actorUserId, accountingSubjectId));
 }

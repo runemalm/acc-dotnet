@@ -90,9 +90,11 @@ tests/
 ├─ ACC.Authority.Tests
 ├─ ACC.ChartOfAccounts.Tests
 ├─ ACC.Evidence.Tests
+├─ ACC.Host.Tests
 ├─ ACC.Identity.Tests
 ├─ ACC.Ledger.Tests
 ├─ ACC.Reporting.Tests
+├─ ACC.Testing
 └─ ACC.VAT.Tests
 
 tools/
@@ -123,6 +125,10 @@ dotnet test acc-dotnet.slnx
 ```bash
 dotnet run --project src/ACC.Host/ACC.Host.csproj
 ```
+
+## API
+
+When running in Development, explore the API at [http://localhost:5000/swagger](http://localhost:5000/swagger).
 
 ## License
 

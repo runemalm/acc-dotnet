@@ -5,5 +5,10 @@ public enum Power
     AssignRole,
     RevokeRole,
     AdoptChartOfAccounts,
-    ManageChartOfAccounts
+    ManageChartOfAccounts,
+    ViewChartOfAccounts,
+    PostJournalEntry,
+    ViewJournalEntry,
+    OpenFiscalPeriod,
+    CloseFiscalPeriod
 }

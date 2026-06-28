@@ -1,5 +1,7 @@
 using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Application.UseCases.RevokeRole;
+using ACC.BuildingBlocks.Authorization;
+using ACC.BuildingBlocks.Failures;
 using ACC.Authority.Domain.Aggregates;
 using ACC.Authority.Tests.TestKit;
 using Xunit;
@@ -36,7 +38,7 @@ public sealed class RevokeRoleTests
             new RevokeRoleCommand(assigned.ActorUserId, assigned.RoleAssignmentId),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<StateConflictException>(() =>
             context.RevokeRole.Handle(
                 new RevokeRoleCommand(assigned.ActorUserId, assigned.RoleAssignmentId),
                 DateTimeOffset.UtcNow));
@@ -52,7 +54,7 @@ public sealed class RevokeRoleTests
         var actorUserId = Guid.NewGuid();
         context.RecognizeUser(actorUserId);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
             context.RevokeRole.Handle(
                 new RevokeRoleCommand(actorUserId, assigned.RoleAssignmentId),
                 DateTimeOffset.UtcNow));

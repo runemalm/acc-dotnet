@@ -1,5 +1,7 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Application.Ports.ChartOfAccounts;
+using ACC.Ledger.Application.Ports.Authority;
 using ACC.Ledger.Application.Ports.ReadModels.FiscalPeriod;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Domain.Events;
@@ -14,6 +16,7 @@ public sealed class PostJournalEntryHandler
     private readonly EventSourcedRepository<FiscalPeriod> fiscalPeriods;
     private readonly IFiscalPeriodStore fiscalPeriodStore;
     private readonly IAccountAvailabilityPort accountAvailability;
+    private readonly ILedgerAuthorityPort authority;
     private readonly JournalEntryProjection journalEntryProjection;
 
     public PostJournalEntryHandler(
@@ -21,18 +24,30 @@ public sealed class PostJournalEntryHandler
         EventSourcedRepository<FiscalPeriod> fiscalPeriods,
         IFiscalPeriodStore fiscalPeriodStore,
         IAccountAvailabilityPort accountAvailability,
+        ILedgerAuthorityPort authority,
         JournalEntryProjection journalEntryProjection)
     {
         this.journalEntries = journalEntries;
         this.fiscalPeriods = fiscalPeriods;
         this.fiscalPeriodStore = fiscalPeriodStore;
         this.accountAvailability = accountAvailability;
+        this.authority = authority;
         this.journalEntryProjection = journalEntryProjection;
     }
 
     public PostJournalEntryResult Handle(PostJournalEntryCommand command, DateTimeOffset occurredAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+
+        if (command.Lines is null)
+        {
+            throw new ArgumentException("A journal entry must have at least one line.", nameof(command));
+        }
+
+        ActorMustHaveLedgerPower.Ensure(
+            authority.CanPostJournalEntry(command.ActorUserId, command.AccountingSubjectId),
+            command.ActorUserId,
+            "post a journal entry");
 
         var lines = command.Lines
                 .Select(line => new JournalEntryLine(line.Account, line.Debit, line.Credit))
@@ -41,7 +56,7 @@ public sealed class PostJournalEntryHandler
         var fiscalPeriodView = fiscalPeriodStore.FindFor(
             command.AccountingSubjectId,
             command.AccountingDate)
-            ?? throw new InvalidOperationException(
+            ?? throw new StateConflictException(
                 $"No fiscal period contains accounting date {command.AccountingDate}.");
 
         var fiscalPeriod = fiscalPeriods.Load(FiscalPeriodStream(fiscalPeriodView.FiscalPeriodId));
@@ -65,6 +80,7 @@ public sealed class PostJournalEntryHandler
 
         var journalEntry = JournalEntry.Posted(
             journalEntryId,
+            command.AccountingSubjectId,
             command.AccountingDate,
             command.Description,
             lines,

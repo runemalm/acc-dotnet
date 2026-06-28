@@ -44,13 +44,17 @@ flowchart LR
     PostingAccountMustBeRecognized -. constrains .-> PostJournalEntry
     PostingAccountMustBeActive -. constrains .-> PostJournalEntry
     FiscalPeriodMustBeOpenToClose -. constrains .-> CloseFiscalPeriod
+    ActorMustHaveLedgerPower -. constrains .-> OpenFiscalPeriod
+    ActorMustHaveLedgerPower -. constrains .-> CloseFiscalPeriod
+    ActorMustHaveLedgerPower -. constrains .-> PostJournalEntry
+    ActorMustHaveLedgerPower -. constrains .-> ViewJournalEntry
 ```
 
 ## Aggregates
 
 | Aggregate    | Description                                                                    |
 | ------------ | ------------------------------------------------------------------------------ |
-| JournalEntry | Represents an accounting record consisting of one or more journal entry lines. |
+| JournalEntry | Represents an accounting record belonging to an accounting subject and consisting of one or more journal entry lines. |
 | FiscalPeriod | Governs whether accounting facts may be recorded for a period of time.         |
 
 ## Use Cases
@@ -60,7 +64,7 @@ flowchart LR
 | OpenFiscalPeriod | Opens a fiscal period for an accounting subject.                                                           |
 | CloseFiscalPeriod | Closes an open fiscal period.                                                                             |
 | PostJournalEntry | Records an accounting fact by posting a balanced journal entry to recognized, active accounts within an open fiscal period. |
-| ViewJournalEntry | Returns a representation of a previously recorded journal entry.                                           |
+| ViewJournalEntry | Returns a previously recorded journal entry to an actor empowered to view it for its accounting subject.    |
 
 ## Events
 
@@ -68,7 +72,7 @@ flowchart LR
 | ------------------ | ------------------------------------------------ |
 | FiscalPeriodOpened | A fiscal period has been opened for posting.     |
 | FiscalPeriodClosed | A fiscal period has been closed for posting.     |
-| JournalEntryPosted | A journal entry has been recorded in the ledger. |
+| JournalEntryPosted | A journal entry has been recorded for an accounting subject in the ledger. |
 
 ## Invariants
 
@@ -81,3 +85,4 @@ The Ledger protects accounting validity through domain invariants.
 | PostingAccountMustBeRecognized | Every posting account must be recognized by the accounting subject's operative chart. |
 | PostingAccountMustBeActive | Every posting account must be active when the journal entry is posted. |
 | FiscalPeriodMustBeOpenToClose | A fiscal period may only be closed if it is open.            |
+| ActorMustHaveLedgerPower | An acting user must hold the power required to open or close a fiscal period, post a journal entry, or view a journal entry. |

@@ -31,7 +31,7 @@ public sealed class AuthenticateUserEndpointTests
     }
 
     [Fact]
-    public async Task AuthenticateUser_WithInvalidCredentials_ReturnsBadRequest()
+    public async Task AuthenticateUser_WithInvalidCredentials_ReturnsUnauthorized()
     {
         await using var context = await IdentityApiTestContext.Create();
 
@@ -41,9 +41,9 @@ public sealed class AuthenticateUserEndpointTests
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
         Assert.NotNull(problem);
-        Assert.Equal((int)HttpStatusCode.BadRequest, problem.Status);
+        Assert.Equal((int)HttpStatusCode.Unauthorized, problem.Status);
         Assert.Equal("Authentication must be valid.", problem.Detail);
     }
 }

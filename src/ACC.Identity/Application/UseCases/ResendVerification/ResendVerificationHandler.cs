@@ -34,12 +34,13 @@ public sealed class ResendVerificationHandler
     {
         ArgumentNullException.ThrowIfNull(command);
 
+        UserEmailMustBeValid.Ensure(command.Email);
         var email = command.Email.Trim();
         var existingUser = userStore.FindByEmail(NormalizeEmail(email));
 
-        if (existingUser is null)
+        if (existingUser is null || existingUser.EmailVerifiedAt is not null)
         {
-            throw new InvalidOperationException($"User with email address {email} could not be found.");
+            return new ResendVerificationResult();
         }
 
         var streamId = UserStream(existingUser.UserId);

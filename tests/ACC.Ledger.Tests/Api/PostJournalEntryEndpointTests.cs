@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
+using ACC.Ledger.Infrastructure.Endpoints;
 using ACC.Ledger.Tests.TestKit;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -37,7 +38,7 @@ public sealed class PostJournalEntryEndpointTests
     }
 
     [Fact]
-    public async Task PostJournalEntry_WithUnbalancedEntry_ReturnsBadRequest()
+    public async Task PostJournalEntry_WithUnbalancedEntry_ReturnsUnprocessableEntity()
     {
         await using var context = await LedgerApiTestContext.Create();
         var accountingSubjectId = Guid.NewGuid();
@@ -50,25 +51,25 @@ public sealed class PostJournalEntryEndpointTests
 
         var response = await context.Client.PostAsJsonAsync(
             "/ledger/journal-entries",
-            new PostJournalEntryCommand(
+            new PostJournalEntryRequest(
                 accountingSubjectId,
                 new DateOnly(2026, 6, 10),
                 "Unbalanced entry",
                 [
-                    new PostJournalEntryCommandLine("Cash", 1000m, 0m),
-                    new PostJournalEntryCommandLine("Owner Equity", 0m, 900m)
+                    new PostJournalEntryRequestLine("Cash", 1000m, 0m),
+                    new PostJournalEntryRequestLine("Owner Equity", 0m, 900m)
                 ]));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.NotNull(problem);
-        Assert.Equal((int)HttpStatusCode.BadRequest, problem.Status);
+        Assert.Equal((int)HttpStatusCode.UnprocessableEntity, problem.Status);
         Assert.Contains("Journal entry must balance.", problem.Detail);
     }
 
     [Fact]
-    public async Task PostJournalEntry_WithUnrecognizedAccount_ReturnsBadRequest()
+    public async Task PostJournalEntry_WithUnrecognizedAccount_ReturnsUnprocessableEntity()
     {
         await using var context = await LedgerApiTestContext.Create();
         var accountingSubjectId = Guid.NewGuid();
@@ -84,12 +85,12 @@ public sealed class PostJournalEntryEndpointTests
             BalancedJournalEntry(accountingSubjectId, accountingDate));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.NotNull(problem);
         Assert.Contains("Account Cash must be recognized", problem.Detail);
     }
 
-    private static PostJournalEntryCommand BalancedJournalEntry(
+    private static PostJournalEntryRequest BalancedJournalEntry(
         Guid accountingSubjectId,
         DateOnly accountingDate) =>
         new(
@@ -97,7 +98,7 @@ public sealed class PostJournalEntryEndpointTests
             accountingDate,
             "Initial capital contribution",
             [
-                new PostJournalEntryCommandLine("Cash", 1000m, 0m),
-                new PostJournalEntryCommandLine("Owner Equity", 0m, 1000m)
+                new PostJournalEntryRequestLine("Cash", 1000m, 0m),
+                new PostJournalEntryRequestLine("Owner Equity", 0m, 1000m)
             ]);
 }

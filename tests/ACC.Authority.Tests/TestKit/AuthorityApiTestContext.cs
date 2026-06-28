@@ -1,6 +1,7 @@
 using ACC.Authority.Application.Ports.AccountingSubject;
 using ACC.Authority.Application.Ports.Identity;
 using ACC.Authority.Application.UseCases.EstablishInitialOwner;
+using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -43,9 +44,12 @@ public sealed class AuthorityApiTestContext : IAsyncDisposable
         builder.Services.RemoveAll<IRecognizedAccountingSubjectPort>();
         builder.Services.AddSingleton<IRecognizedUserPort>(recognizedUsers);
         builder.Services.AddSingleton<IRecognizedAccountingSubjectPort>(recognizedAccountingSubjects);
+        builder.Services.AddTestAuthentication();
 
         var app = builder.Build();
 
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.MapAuthority();
 
         await app.StartAsync();
@@ -62,11 +66,14 @@ public sealed class AuthorityApiTestContext : IAsyncDisposable
             BaseAddress = new Uri(address)
         };
 
-        return new AuthorityApiTestContext(
+        var context = new AuthorityApiTestContext(
             app,
             client,
             recognizedUsers,
             recognizedAccountingSubjects);
+        context.Client.AuthenticateAs(Guid.NewGuid());
+
+        return context;
     }
 
     public void RecognizeUser(Guid userId) =>

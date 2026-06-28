@@ -2,7 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Domain.Aggregates;
+using ACC.Authority.Infrastructure.Endpoints;
 using ACC.Authority.Tests.TestKit;
+using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -18,14 +20,17 @@ public sealed class AssignRoleEndpointTests
         var actorUserId = context.EstablishOwner(accountingSubjectId);
         var userId = Guid.NewGuid();
         context.RecognizeUser(userId);
+        context.Client.AuthenticateAs(actorUserId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/authority/assign-role",
-            new AssignRoleCommand(
-                actorUserId,
-                userId,
-                accountingSubjectId,
-                Role.Owner));
+            new
+            {
+                ActorUserId = Guid.NewGuid(),
+                UserId = userId,
+                AccountingSubjectId = accountingSubjectId,
+                Role = Role.Owner
+            });
 
         var result = await response.Content.ReadFromJsonAsync<AssignRoleResult>();
 
@@ -38,7 +43,7 @@ public sealed class AssignRoleEndpointTests
     }
 
     [Fact]
-    public async Task AssignRole_WithActorWithoutAssignRolePower_ReturnsBadRequest()
+    public async Task AssignRole_WithActorWithoutAssignRolePower_ReturnsForbidden()
     {
         await using var context = await AuthorityApiTestContext.Create();
         var accountingSubjectId = Guid.NewGuid();
@@ -47,20 +52,20 @@ public sealed class AssignRoleEndpointTests
         context.RecognizeAccountingSubject(accountingSubjectId);
         context.RecognizeUser(actorUserId);
         context.RecognizeUser(userId);
+        context.Client.AuthenticateAs(actorUserId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/authority/assign-role",
-            new AssignRoleCommand(
-                actorUserId,
+            new AssignRoleRequest(
                 userId,
                 accountingSubjectId,
                 Role.Owner));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
         Assert.NotNull(problem);
-        Assert.Equal((int)HttpStatusCode.BadRequest, problem.Status);
+        Assert.Equal((int)HttpStatusCode.Forbidden, problem.Status);
         Assert.Contains("must have AssignRole power", problem.Detail);
     }
 }

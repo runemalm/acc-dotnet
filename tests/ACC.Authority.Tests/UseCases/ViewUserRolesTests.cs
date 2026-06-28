@@ -10,20 +10,30 @@ namespace ACC.Authority.Tests.UseCases;
 public sealed class ViewUserRolesTests
 {
     [Fact]
-    public void GivenUserRoles_WhenViewingUserRoles_ThenActiveRolesReturned()
+    public void GivenOwnRoles_WhenViewingUserRoles_ThenActiveRolesReturned()
     {
         var context = new AuthorityUseCaseTestContext();
         var userId = Guid.NewGuid();
+        var otherUserId = Guid.NewGuid();
         var activeAccountingSubjectId = Guid.NewGuid();
         var revokedAccountingSubjectId = Guid.NewGuid();
         var activeSubjectOwnerId = context.EstablishOwner(activeAccountingSubjectId);
         var revokedSubjectOwnerId = context.EstablishOwner(revokedAccountingSubjectId);
         context.RecognizeUser(userId);
+        context.RecognizeUser(otherUserId);
 
         var activeRole = context.AssignRole.Handle(
             new AssignRoleCommand(
                 activeSubjectOwnerId,
                 userId,
+                activeAccountingSubjectId,
+                Role.Owner),
+            DateTimeOffset.UtcNow);
+
+        context.AssignRole.Handle(
+            new AssignRoleCommand(
+                activeSubjectOwnerId,
+                otherUserId,
                 activeAccountingSubjectId,
                 Role.Owner),
             DateTimeOffset.UtcNow);

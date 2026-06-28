@@ -34,12 +34,12 @@ public sealed class CompleteOnboardingHandler
             command.VatReportingPeriod));
 
         establishInitialOwner.Handle(new EstablishInitialOwnerCommand(
-                command.UserId,
+                command.ActorUserId,
                 accountingSubject.AccountingSubjectId),
             occurredAt);
 
         adoptChartOfAccounts.Handle(new AdoptChartOfAccountsCommand(
-                command.UserId,
+                command.ActorUserId,
                 accountingSubject.AccountingSubjectId,
                 command.ChartOfAccountsTemplateId),
             occurredAt);

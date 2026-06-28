@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Domain.Aggregates;
 
 namespace ACC.Ledger.Domain.Invariants;
@@ -8,7 +9,7 @@ public static class JournalEntryMustBalance
     {
         if (journalEntry.TotalDebits != journalEntry.TotalCredits)
         {
-            throw new InvalidOperationException(
+            throw new SemanticViolationException(
                 $"Journal entry must balance. Debits: {journalEntry.TotalDebits}; credits: {journalEntry.TotalCredits}.");
         }
     }

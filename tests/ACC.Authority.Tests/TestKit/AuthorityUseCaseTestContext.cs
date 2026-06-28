@@ -19,6 +19,7 @@ internal sealed class AuthorityUseCaseTestContext
     private readonly InMemoryRoleAssignmentStore roleAssignmentStore = new();
     private readonly TestRecognizedUserPort recognizedUsers = new();
     private readonly TestRecognizedAccountingSubjectPort recognizedAccountingSubjects = new();
+    private readonly AuthorityPolicy authorityPolicy;
 
     public AuthorityUseCaseTestContext()
     {
@@ -27,7 +28,7 @@ internal sealed class AuthorityUseCaseTestContext
             eventStore,
             RoleAssignment.Rehydrate);
         var roleAssignmentProjection = new RoleAssignmentProjection(roleAssignmentStore);
-        var authorityPolicy = new AuthorityPolicy(
+        authorityPolicy = new AuthorityPolicy(
             roleAssignmentStore,
             new RolePowerPolicy());
 
@@ -65,6 +66,9 @@ internal sealed class AuthorityUseCaseTestContext
 
     public RoleAssignmentView? FindRoleAssignment(Guid roleAssignmentId) =>
         roleAssignmentStore.Find(roleAssignmentId);
+
+    public bool HasPower(Guid actorUserId, Guid accountingSubjectId, Power power) =>
+        authorityPolicy.HasPower(actorUserId, accountingSubjectId, power);
 
     public void RecognizeUser(Guid userId) =>
         recognizedUsers.Recognize(userId);

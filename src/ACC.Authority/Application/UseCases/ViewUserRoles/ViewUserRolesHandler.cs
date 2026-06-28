@@ -15,7 +15,7 @@ public sealed class ViewUserRolesHandler
     {
         ArgumentNullException.ThrowIfNull(query);
 
-        var roles = roleAssignments.FindActiveByUserId(query.UserId)
+        var roles = roleAssignments.FindActiveByUserId(query.ActorUserId)
             .Select(roleAssignment => new ViewUserRoleResponse(
                 roleAssignment.RoleAssignmentId,
                 roleAssignment.AccountingSubjectId,
@@ -23,6 +23,6 @@ public sealed class ViewUserRolesHandler
                 roleAssignment.AssignedAt))
             .ToArray();
 
-        return new ViewUserRolesResponse(query.UserId, roles);
+        return new ViewUserRolesResponse(query.ActorUserId, roles);
     }
 }

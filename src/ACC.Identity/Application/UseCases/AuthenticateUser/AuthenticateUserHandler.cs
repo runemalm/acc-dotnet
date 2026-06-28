@@ -29,6 +29,10 @@ public sealed class AuthenticateUserHandler
     {
         ArgumentNullException.ThrowIfNull(command);
 
+        AuthenticationMustBeValid.Ensure(
+            !string.IsNullOrWhiteSpace(command.Email) &&
+            !string.IsNullOrWhiteSpace(command.Password));
+
         var existingUser = userStore.FindByEmail(NormalizeEmail(command.Email));
 
         AuthenticationMustBeValid.Ensure(existingUser is not null);

@@ -28,6 +28,26 @@ public sealed class AccountingSubject
                 nameof(organizationNumber));
         }
 
+        if (!Enum.IsDefined(type))
+        {
+            throw new ArgumentOutOfRangeException(nameof(type));
+        }
+
+        if (!Enum.IsDefined(country))
+        {
+            throw new ArgumentOutOfRangeException(nameof(country));
+        }
+
+        if (!Enum.IsDefined(accountingMethod))
+        {
+            throw new ArgumentOutOfRangeException(nameof(accountingMethod));
+        }
+
+        if (!Enum.IsDefined(vatReportingPeriod))
+        {
+            throw new ArgumentOutOfRangeException(nameof(vatReportingPeriod));
+        }
+
         Id = id;
         Name = name;
         OrganizationNumber = organizationNumber;

@@ -77,7 +77,7 @@ public static class ModuleRegistration
 
     public static IEndpointRouteBuilder MapAuthority(this IEndpointRouteBuilder endpoints)
     {
-        var authority = endpoints.MapGroup("/authority");
+        var authority = endpoints.MapGroup("/authority").RequireAuthorization();
 
         authority.MapAuthorityEndpoints();
 

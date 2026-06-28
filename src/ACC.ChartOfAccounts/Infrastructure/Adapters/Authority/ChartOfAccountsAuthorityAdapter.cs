@@ -18,4 +18,7 @@ public sealed class ChartOfAccountsAuthorityAdapter : IChartOfAccountsAuthorityP
 
     public bool CanManageChartOfAccounts(Guid actorUserId, Guid accountingSubjectId) =>
         authorityPolicy.HasPower(actorUserId, accountingSubjectId, Power.ManageChartOfAccounts);
+
+    public bool CanViewChartOfAccounts(Guid actorUserId, Guid accountingSubjectId) =>
+        authorityPolicy.HasPower(actorUserId, accountingSubjectId, Power.ViewChartOfAccounts);
 }

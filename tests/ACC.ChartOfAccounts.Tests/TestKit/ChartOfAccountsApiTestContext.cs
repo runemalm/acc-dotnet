@@ -3,6 +3,7 @@ using ACC.ChartOfAccounts.Application.Ports.Authority;
 using ACC.ChartOfAccounts.Application.Ports.Templates;
 using ACC.ChartOfAccounts.Application.UseCases.AdoptChartOfAccounts;
 using ACC.ChartOfAccounts.Application.UseCases.DeactivateAccount;
+using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -51,8 +52,11 @@ public sealed class ChartOfAccountsApiTestContext : IAsyncDisposable
         builder.Services.AddSingleton<IChartOfAccountsTemplateCatalog>(templates);
         builder.Services.AddSingleton<IRecognizedAccountingSubjectPort>(recognizedAccountingSubjects);
         builder.Services.AddSingleton<IChartOfAccountsAuthorityPort>(authority);
+        builder.Services.AddTestAuthentication();
 
         var app = builder.Build();
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.MapChartOfAccounts();
         await app.StartAsync();
 
@@ -63,12 +67,15 @@ public sealed class ChartOfAccountsApiTestContext : IAsyncDisposable
             .Addresses
             .Single();
 
-        return new ChartOfAccountsApiTestContext(
+        var context = new ChartOfAccountsApiTestContext(
             app,
             new HttpClient { BaseAddress = new Uri(address) },
             templates,
             recognizedAccountingSubjects,
             authority);
+        context.Client.AuthenticateAs(Guid.NewGuid());
+
+        return context;
     }
 
     public void AddTemplate(
@@ -91,12 +98,16 @@ public sealed class ChartOfAccountsApiTestContext : IAsyncDisposable
     public void AllowManagement(Guid actorUserId, Guid accountingSubjectId) =>
         authority.AllowManagement(actorUserId, accountingSubjectId);
 
+    public void AllowViewing(Guid actorUserId, Guid accountingSubjectId) =>
+        authority.AllowViewing(actorUserId, accountingSubjectId);
+
     public Guid AdoptChart(Guid accountingSubjectId, Guid actorUserId)
     {
         AddTemplate();
         RecognizeAccountingSubject(accountingSubjectId);
         AllowAdoption(actorUserId, accountingSubjectId);
         AllowManagement(actorUserId, accountingSubjectId);
+        AllowViewing(actorUserId, accountingSubjectId);
 
         using var scope = app.Services.CreateScope();
         return scope.ServiceProvider
@@ -125,4 +136,5 @@ public sealed class ChartOfAccountsApiTestContext : IAsyncDisposable
         Client.Dispose();
         await app.DisposeAsync();
     }
+
 }

@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Application.UseCases.RegisterUser;
 using ACC.Identity.Application.UseCases.VerifyEmail;
 using ACC.Identity.Tests.TestKit;
@@ -39,7 +40,7 @@ public sealed class VerifyEmailTests
             new RegisterUserCommand("user@example.com", "correct horse battery staple"),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<SemanticViolationException>(() =>
             context.VerifyEmail.Handle(
                 new VerifyEmailCommand("not-the-token"),
                 DateTimeOffset.UtcNow));
@@ -56,7 +57,7 @@ public sealed class VerifyEmailTests
             new RegisterUserCommand("user@example.com", "correct horse battery staple"),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<SemanticViolationException>(() =>
             context.VerifyEmail.Handle(
                 new VerifyEmailCommand("verification-token-1"),
                 DateTimeOffset.UtcNow.AddDays(2)));

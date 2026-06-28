@@ -1,4 +1,5 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Application.Ports.AccountingSubject;
 using ACC.ChartOfAccounts.Application.Ports.Authority;
 using ACC.ChartOfAccounts.Application.Ports.ReadModels.ChartOfAccounts;
@@ -44,7 +45,7 @@ public sealed class AdoptChartOfAccountsHandler
 
         if (!recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId))
         {
-            throw new InvalidOperationException(
+            throw new ResourceNotFoundException(
                 $"Accounting subject {command.AccountingSubjectId} must be recognized before adopting a chart of accounts.");
         }
 
@@ -58,7 +59,7 @@ public sealed class AdoptChartOfAccountsHandler
             "adopt a chart of accounts");
 
         var template = templates.Find(command.TemplateId)
-            ?? throw new InvalidOperationException(
+            ?? throw new ResourceNotFoundException(
                 $"Chart of accounts template {command.TemplateId} is not recognized.");
 
         var chartOfAccountsId = Guid.NewGuid();

@@ -1,4 +1,5 @@
 using ACC.Authority.Domain.Powers;
+using ACC.BuildingBlocks.Authorization;
 
 namespace ACC.Authority.Domain.Invariants;
 
@@ -12,7 +13,7 @@ public static class ActorMustHavePower
     {
         if (!hasPower)
         {
-            throw new InvalidOperationException(
+            throw new AuthorizationDeniedException(
                 $"User {actorUserId} must have {power} power for accounting subject {accountingSubjectId}.");
         }
     }

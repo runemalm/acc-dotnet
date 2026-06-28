@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
+using ACC.Ledger.Infrastructure.Endpoints;
 using ACC.Ledger.Tests.TestKit;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -28,7 +29,7 @@ public sealed class CloseFiscalPeriodEndpointTests
     }
 
     [Fact]
-    public async Task CloseFiscalPeriod_WithUnknownPeriod_ReturnsBadRequest()
+    public async Task CloseFiscalPeriod_WithUnknownPeriod_ReturnsNotFound()
     {
         await using var context = await LedgerApiTestContext.Create();
 
@@ -38,9 +39,9 @@ public sealed class CloseFiscalPeriodEndpointTests
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.NotNull(problem);
-        Assert.Equal((int)HttpStatusCode.BadRequest, problem.Status);
+        Assert.Equal((int)HttpStatusCode.NotFound, problem.Status);
         Assert.Contains("could not be found", problem.Detail);
     }
 
@@ -48,7 +49,7 @@ public sealed class CloseFiscalPeriodEndpointTests
     {
         var response = await context.Client.PostAsJsonAsync(
             "/ledger/fiscal-periods",
-            new OpenFiscalPeriodCommand(
+            new OpenFiscalPeriodRequest(
                 Guid.NewGuid(),
                 new DateOnly(2026, 1, 1),
                 new DateOnly(2026, 12, 31)));

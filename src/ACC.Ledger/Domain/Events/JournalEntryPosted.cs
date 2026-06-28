@@ -6,6 +6,7 @@ public sealed record JournalEntryPosted
 {
     public JournalEntryPosted(
         Guid journalEntryId,
+        Guid accountingSubjectId,
         DateOnly accountingDate,
         string description,
         IReadOnlyCollection<JournalEntryLine> lines,
@@ -19,6 +20,13 @@ public sealed record JournalEntryPosted
             throw new ArgumentException("A journal entry posted fact must identify the journal entry.", nameof(journalEntryId));
         }
 
+        if (accountingSubjectId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "A journal entry posted fact must identify the accounting subject.",
+                nameof(accountingSubjectId));
+        }
+
         if (string.IsNullOrWhiteSpace(description))
         {
             throw new ArgumentException("A journal entry posted fact must describe the journal entry.", nameof(description));
@@ -30,6 +38,7 @@ public sealed record JournalEntryPosted
         }
 
         JournalEntryId = journalEntryId;
+        AccountingSubjectId = accountingSubjectId;
         AccountingDate = accountingDate;
         Description = description;
         Lines = lines.ToArray();
@@ -37,6 +46,8 @@ public sealed record JournalEntryPosted
     }
 
     public Guid JournalEntryId { get; }
+
+    public Guid AccountingSubjectId { get; }
 
     public DateOnly AccountingDate { get; }
 
@@ -52,6 +63,7 @@ public sealed record JournalEntryPosted
 
         return new JournalEntryPosted(
             journalEntry.Id,
+            journalEntry.AccountingSubjectId,
             journalEntry.AccountingDate,
             journalEntry.Description,
             journalEntry.Lines,

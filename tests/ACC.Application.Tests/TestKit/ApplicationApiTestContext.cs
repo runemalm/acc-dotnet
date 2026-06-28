@@ -4,6 +4,7 @@ using ACC.Authority;
 using ACC.Authority.Application.Ports.Identity;
 using ACC.ChartOfAccounts;
 using ACC.ChartOfAccounts.Application.Ports.Templates;
+using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -51,8 +52,11 @@ public sealed class ApplicationApiTestContext : IAsyncDisposable
         builder.Services.RemoveAll<IChartOfAccountsTemplateCatalog>();
         builder.Services.AddSingleton<IRecognizedUserPort>(recognizedUsers);
         builder.Services.AddSingleton<IChartOfAccountsTemplateCatalog>(templates);
+        builder.Services.AddTestAuthentication();
 
         var app = builder.Build();
+        app.UseAuthentication();
+        app.UseAuthorization();
         app.MapApplication();
         await app.StartAsync();
 
@@ -63,11 +67,14 @@ public sealed class ApplicationApiTestContext : IAsyncDisposable
             .Addresses
             .Single();
 
-        return new ApplicationApiTestContext(
+        var context = new ApplicationApiTestContext(
             app,
             new HttpClient { BaseAddress = new Uri(address) },
             recognizedUsers,
             templates);
+        context.Client.AuthenticateAs(Guid.NewGuid());
+
+        return context;
     }
 
     public void RecognizeUser(Guid userId) =>
@@ -87,4 +94,5 @@ public sealed class ApplicationApiTestContext : IAsyncDisposable
         Client.Dispose();
         await app.DisposeAsync();
     }
+
 }

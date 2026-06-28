@@ -13,5 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/ACC.ChartOfAccounts/ACC.ChartOfAccounts.csproj" />
+    <ProjectReference Include="../ACC.Testing/ACC.Testing.csproj" />
   </ItemGroup>
 </Project>

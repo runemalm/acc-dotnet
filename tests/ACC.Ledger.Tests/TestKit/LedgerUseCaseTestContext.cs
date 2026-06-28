@@ -7,6 +7,7 @@ using ACC.Ledger.Application.Ports.ReadModels.JournalEntry;
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
+using ACC.Ledger.Application.UseCases.ViewJournalEntry;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Infrastructure.ReadModels.FiscalPeriod;
 using ACC.Ledger.Infrastructure.ReadModels.JournalEntry;
@@ -19,6 +20,7 @@ internal sealed class LedgerUseCaseTestContext
     private readonly InMemoryFiscalPeriodStore fiscalPeriodStore = new();
     private readonly InMemoryJournalEntryStore journalEntryStore = new();
     private readonly InMemoryAccountStore accountStore = new();
+    private readonly TestLedgerAuthorityPort authority = new();
 
     public LedgerUseCaseTestContext()
     {
@@ -38,18 +40,25 @@ internal sealed class LedgerUseCaseTestContext
 
         OpenFiscalPeriod = new OpenFiscalPeriodHandler(
             fiscalPeriods,
-            fiscalPeriodProjection);
+            fiscalPeriodProjection,
+            authority);
 
         CloseFiscalPeriod = new CloseFiscalPeriodHandler(
             fiscalPeriods,
-            fiscalPeriodProjection);
+            fiscalPeriodProjection,
+            authority);
 
         PostJournalEntry = new PostJournalEntryHandler(
             journalEntries,
             fiscalPeriods,
             fiscalPeriodStore,
             accountAvailability,
+            authority,
             journalEntryProjection);
+
+        ViewJournalEntry = new ViewJournalEntryHandler(
+            journalEntryStore,
+            authority);
     }
 
     public OpenFiscalPeriodHandler OpenFiscalPeriod { get; }
@@ -57,6 +66,8 @@ internal sealed class LedgerUseCaseTestContext
     public CloseFiscalPeriodHandler CloseFiscalPeriod { get; }
 
     public PostJournalEntryHandler PostJournalEntry { get; }
+
+    public ViewJournalEntryHandler ViewJournalEntry { get; }
 
     public FiscalPeriodView? FindFiscalPeriod(Guid fiscalPeriodId) =>
         fiscalPeriodStore.Find(fiscalPeriodId);
@@ -66,6 +77,21 @@ internal sealed class LedgerUseCaseTestContext
 
     public JournalEntryView? FindJournalEntry(Guid journalEntryId) =>
         journalEntryStore.Find(journalEntryId);
+
+    public void AllowAllLedgerActs(Guid actorUserId, Guid accountingSubjectId) =>
+        authority.AllowAll(actorUserId, accountingSubjectId);
+
+    public void AllowOpeningFiscalPeriod(Guid actorUserId, Guid accountingSubjectId) =>
+        authority.AllowOpening(actorUserId, accountingSubjectId);
+
+    public void AllowClosingFiscalPeriod(Guid actorUserId, Guid accountingSubjectId) =>
+        authority.AllowClosing(actorUserId, accountingSubjectId);
+
+    public void AllowPostingJournalEntry(Guid actorUserId, Guid accountingSubjectId) =>
+        authority.AllowPosting(actorUserId, accountingSubjectId);
+
+    public void AllowViewingJournalEntry(Guid actorUserId, Guid accountingSubjectId) =>
+        authority.AllowViewing(actorUserId, accountingSubjectId);
 
     public void MakeAccountsActive(Guid accountingSubjectId, params string[] accountNumbers)
     {

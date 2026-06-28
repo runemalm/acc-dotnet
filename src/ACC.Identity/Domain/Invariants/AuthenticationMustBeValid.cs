@@ -1,3 +1,5 @@
+using ACC.BuildingBlocks.Failures;
+
 namespace ACC.Identity.Domain.Invariants;
 
 public static class AuthenticationMustBeValid
@@ -6,7 +8,7 @@ public static class AuthenticationMustBeValid
     {
         if (!isValid)
         {
-            throw new InvalidOperationException("Authentication must be valid.");
+            throw new AuthenticationFailedException("Authentication must be valid.");
         }
     }
 }

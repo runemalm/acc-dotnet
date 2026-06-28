@@ -1,3 +1,5 @@
+using ACC.BuildingBlocks.Failures;
+
 namespace ACC.Authority.Domain.Invariants;
 
 public static class AccountingSubjectMustBeRecognizedForAuthority
@@ -6,7 +8,7 @@ public static class AccountingSubjectMustBeRecognizedForAuthority
     {
         if (!isRecognized)
         {
-            throw new InvalidOperationException(
+            throw new ResourceNotFoundException(
                 $"Accounting subject {accountingSubjectId} must be recognized before authority can be assigned.");
         }
     }

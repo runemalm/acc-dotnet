@@ -19,7 +19,7 @@ public sealed class ResendVerificationTests
         var beforeResend = context.LoadUser(registered.UserId);
 
         context.ResendVerification.Handle(
-            new ResendVerificationCommand(" USER@example.com "),
+            new ResendVerificationCommand("USER@example.com"),
             DateTimeOffset.UtcNow);
 
         var afterResend = context.LoadUser(registered.UserId);
@@ -39,15 +39,32 @@ public sealed class ResendVerificationTests
     }
 
     [Fact]
-    public void GivenUnknownEmail_WhenResendingVerification_ThenUserNotFound()
+    public void GivenUnknownEmail_WhenResendingVerification_ThenRequestIsIndistinguishable()
     {
         var context = new IdentityUseCaseTestContext();
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
-            context.ResendVerification.Handle(
-                new ResendVerificationCommand("missing@example.com"),
-                DateTimeOffset.UtcNow));
+        context.ResendVerification.Handle(
+            new ResendVerificationCommand("missing@example.com"),
+            DateTimeOffset.UtcNow);
 
-        Assert.Contains("could not be found", exception.Message);
+        Assert.Empty(context.EmailSender.SentVerificationEmails);
+    }
+
+    [Fact]
+    public void GivenVerifiedEmail_WhenResendingVerification_ThenRequestIsIndistinguishable()
+    {
+        var context = new IdentityUseCaseTestContext();
+        context.RegisterUser.Handle(
+            new RegisterUserCommand("user@example.com", "correct horse battery staple"),
+            DateTimeOffset.UtcNow);
+        context.VerifyEmail.Handle(
+            new VerifyEmailCommand("verification-token-1"),
+            DateTimeOffset.UtcNow);
+
+        context.ResendVerification.Handle(
+            new ResendVerificationCommand("user@example.com"),
+            DateTimeOffset.UtcNow);
+
+        Assert.Single(context.EmailSender.SentVerificationEmails);
     }
 }

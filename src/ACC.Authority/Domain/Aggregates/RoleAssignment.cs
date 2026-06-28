@@ -1,6 +1,7 @@
 using ACC.Authority.Domain.Events;
 using ACC.Authority.Domain.Invariants;
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 
 namespace ACC.Authority.Domain.Aggregates;
 
@@ -28,7 +29,7 @@ public sealed class RoleAssignment : EventSourcedAggregate
     {
         if (Id == Guid.Empty)
         {
-            throw new InvalidOperationException("A role assignment must exist before it can be revoked.");
+            throw new ResourceNotFoundException("A role assignment must exist before it can be revoked.");
         }
 
         if (revokedByUserId == Guid.Empty)
@@ -55,7 +56,7 @@ public sealed class RoleAssignment : EventSourcedAggregate
         Role role,
         DateTimeOffset assignedAt)
     {
-        EnsureCanAssign(id, assignedByUserId, userId, accountingSubjectId);
+        EnsureCanAssign(id, assignedByUserId, userId, accountingSubjectId, role);
 
         var roleAssignment = new RoleAssignment();
         roleAssignment.Raise(new RoleAssigned(
@@ -107,7 +108,8 @@ public sealed class RoleAssignment : EventSourcedAggregate
         Guid id,
         Guid assignedByUserId,
         Guid userId,
-        Guid accountingSubjectId)
+        Guid accountingSubjectId,
+        Role role)
     {
         if (id == Guid.Empty)
         {
@@ -129,6 +131,11 @@ public sealed class RoleAssignment : EventSourcedAggregate
             throw new ArgumentException(
                 "A role assignment must identify the accounting subject.",
                 nameof(accountingSubjectId));
+        }
+
+        if (!Enum.IsDefined(role))
+        {
+            throw new ArgumentOutOfRangeException(nameof(role));
         }
     }
 

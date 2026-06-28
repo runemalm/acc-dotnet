@@ -1,3 +1,5 @@
+using ACC.BuildingBlocks.Failures;
+
 namespace ACC.Identity.Domain.Invariants;
 
 public static class UserEmailMustBeUnique
@@ -6,7 +8,7 @@ public static class UserEmailMustBeUnique
     {
         if (!isAvailable)
         {
-            throw new InvalidOperationException(
+            throw new StateConflictException(
                 $"A user with email address {email} already exists.");
         }
     }

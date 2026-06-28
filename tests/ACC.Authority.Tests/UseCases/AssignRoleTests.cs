@@ -1,5 +1,7 @@
 using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Domain.Aggregates;
+using ACC.BuildingBlocks.Authorization;
+using ACC.BuildingBlocks.Failures;
 using ACC.Authority.Tests.TestKit;
 using Xunit;
 
@@ -53,7 +55,7 @@ public sealed class AssignRoleTests
                 Role.Owner),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<StateConflictException>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,
@@ -73,7 +75,7 @@ public sealed class AssignRoleTests
         var accountingSubjectId = Guid.NewGuid();
         var actorUserId = context.EstablishOwner(accountingSubjectId);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<ResourceNotFoundException>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,
@@ -95,7 +97,7 @@ public sealed class AssignRoleTests
         context.RecognizeUser(actorUserId);
         context.RecognizeUser(userId);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<ResourceNotFoundException>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,
@@ -118,7 +120,7 @@ public sealed class AssignRoleTests
         context.RecognizeUser(userId);
         context.RecognizeAccountingSubject(accountingSubjectId);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,

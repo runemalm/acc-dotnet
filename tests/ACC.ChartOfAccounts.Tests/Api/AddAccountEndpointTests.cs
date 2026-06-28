@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using ACC.ChartOfAccounts.Application.UseCases.AddAccount;
+using ACC.ChartOfAccounts.Infrastructure.Endpoints;
 using ACC.ChartOfAccounts.Tests.TestKit;
+using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -16,10 +18,11 @@ public sealed class AddAccountEndpointTests
         var accountingSubjectId = Guid.NewGuid();
         var actorUserId = Guid.NewGuid();
         var chartOfAccountsId = context.AdoptChart(accountingSubjectId, actorUserId);
+        context.Client.AuthenticateAs(actorUserId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/chart-of-accounts/add-account",
-            new AddAccountCommand(actorUserId, chartOfAccountsId, "3000", "Revenue"));
+            new AddAccountRequest(chartOfAccountsId, "3000", "Revenue"));
 
         var result = await response.Content.ReadFromJsonAsync<AddAccountResult>();
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
@@ -28,19 +31,20 @@ public sealed class AddAccountEndpointTests
     }
 
     [Fact]
-    public async Task AddAccount_WithDuplicateNumber_ReturnsBadRequest()
+    public async Task AddAccount_WithDuplicateNumber_ReturnsConflict()
     {
         await using var context = await ChartOfAccountsApiTestContext.Create();
         var accountingSubjectId = Guid.NewGuid();
         var actorUserId = Guid.NewGuid();
         var chartOfAccountsId = context.AdoptChart(accountingSubjectId, actorUserId);
+        context.Client.AuthenticateAs(actorUserId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/chart-of-accounts/add-account",
-            new AddAccountCommand(actorUserId, chartOfAccountsId, "1000", "Another asset account"));
+            new AddAccountRequest(chartOfAccountsId, "1000", "Another asset account"));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.NotNull(problem);
         Assert.Contains("must be unique within the chart of accounts", problem.Detail);
     }

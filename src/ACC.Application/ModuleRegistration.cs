@@ -17,7 +17,7 @@ public static class ModuleRegistration
 
     public static IEndpointRouteBuilder MapApplication(this IEndpointRouteBuilder endpoints)
     {
-        var onboarding = endpoints.MapGroup("/onboarding");
+        var onboarding = endpoints.MapGroup("/onboarding").RequireAuthorization();
         onboarding.MapOnboardingEndpoints();
 
         return endpoints;

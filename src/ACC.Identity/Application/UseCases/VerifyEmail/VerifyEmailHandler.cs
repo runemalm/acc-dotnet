@@ -1,4 +1,5 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Application.Ports.ReadModels.User;
 using ACC.Identity.Domain.Aggregates;
 using ACC.Identity.Domain.Events;
@@ -26,11 +27,16 @@ public sealed class VerifyEmailHandler
     {
         ArgumentNullException.ThrowIfNull(command);
 
+        if (string.IsNullOrWhiteSpace(command.Token))
+        {
+            throw new SemanticViolationException("Email verification must be valid.");
+        }
+
         var existingUser = userStore.FindByEmailVerificationToken(command.Token);
 
         if (existingUser is null)
         {
-            throw new InvalidOperationException("Email verification must be valid.");
+            throw new SemanticViolationException("Email verification must be valid.");
         }
 
         var streamId = UserStream(existingUser.UserId);

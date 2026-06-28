@@ -19,8 +19,10 @@
     <Project Path="tests/ACC.ChartOfAccounts.Tests/ACC.ChartOfAccounts.Tests.csproj" />
     <Project Path="tests/ACC.Evidence.Tests/ACC.Evidence.Tests.csproj" />
     <Project Path="tests/ACC.Identity.Tests/ACC.Identity.Tests.csproj" />
+    <Project Path="tests/ACC.Host.Tests/ACC.Host.Tests.csproj" />
     <Project Path="tests/ACC.Ledger.Tests/ACC.Ledger.Tests.csproj" />
     <Project Path="tests/ACC.Reporting.Tests/ACC.Reporting.Tests.csproj" />
+    <Project Path="tests/ACC.Testing/ACC.Testing.csproj" />
     <Project Path="tests/ACC.VAT.Tests/ACC.VAT.Tests.csproj" />
   </Folder>
   <Folder Name="/tools/">

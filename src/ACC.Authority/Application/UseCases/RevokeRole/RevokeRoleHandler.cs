@@ -6,6 +6,7 @@ using ACC.Authority.Domain.Invariants;
 using ACC.Authority.Domain.Powers;
 using ACC.Authority.Infrastructure.ReadModels.RoleAssignment;
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 
 namespace ACC.Authority.Application.UseCases.RevokeRole;
 
@@ -38,7 +39,7 @@ public sealed class RevokeRoleHandler
         var roleAssignment = roleAssignments.Load(RoleAssignmentStream(command.RoleAssignmentId));
         if (roleAssignment.Id == Guid.Empty)
         {
-            throw new InvalidOperationException("A role assignment must exist before it can be revoked.");
+            throw new ResourceNotFoundException("A role assignment must exist before it can be revoked.");
         }
 
         ActorMustHavePower.Ensure(

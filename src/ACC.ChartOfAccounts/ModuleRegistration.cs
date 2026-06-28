@@ -81,7 +81,7 @@ public static class ModuleRegistration
 
     public static IEndpointRouteBuilder MapChartOfAccounts(this IEndpointRouteBuilder endpoints)
     {
-        var chartOfAccounts = endpoints.MapGroup("/chart-of-accounts");
+        var chartOfAccounts = endpoints.MapGroup("/chart-of-accounts").RequireAuthorization();
         chartOfAccounts.MapChartOfAccountsEndpoints();
 
         return endpoints;

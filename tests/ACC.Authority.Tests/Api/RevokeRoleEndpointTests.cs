@@ -3,7 +3,9 @@ using System.Net.Http.Json;
 using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Application.UseCases.RevokeRole;
 using ACC.Authority.Domain.Aggregates;
+using ACC.Authority.Infrastructure.Endpoints;
 using ACC.Authority.Tests.TestKit;
+using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -16,12 +18,11 @@ public sealed class RevokeRoleEndpointTests
     {
         await using var context = await AuthorityApiTestContext.Create();
         var assigned = await AssignOwnerRole(context);
+        context.Client.AuthenticateAs(assigned.ActorUserId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/authority/revoke-role",
-            new RevokeRoleCommand(
-                assigned.ActorUserId,
-                assigned.RoleAssignmentId));
+            new RevokeRoleRequest(assigned.RoleAssignmentId));
 
         var result = await response.Content.ReadFromJsonAsync<RevokeRoleResult>();
 
@@ -30,28 +31,25 @@ public sealed class RevokeRoleEndpointTests
     }
 
     [Fact]
-    public async Task RevokeRole_WithRevokedRoleAssignment_ReturnsBadRequest()
+    public async Task RevokeRole_WithRevokedRoleAssignment_ReturnsConflict()
     {
         await using var context = await AuthorityApiTestContext.Create();
         var assigned = await AssignOwnerRole(context);
+        context.Client.AuthenticateAs(assigned.ActorUserId);
 
         await context.Client.PostAsJsonAsync(
             "/authority/revoke-role",
-            new RevokeRoleCommand(
-                assigned.ActorUserId,
-                assigned.RoleAssignmentId));
+            new RevokeRoleRequest(assigned.RoleAssignmentId));
 
         var response = await context.Client.PostAsJsonAsync(
             "/authority/revoke-role",
-            new RevokeRoleCommand(
-                assigned.ActorUserId,
-                assigned.RoleAssignmentId));
+            new RevokeRoleRequest(assigned.RoleAssignmentId));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.NotNull(problem);
-        Assert.Equal((int)HttpStatusCode.BadRequest, problem.Status);
+        Assert.Equal((int)HttpStatusCode.Conflict, problem.Status);
         Assert.Equal("A role assignment must be active before it can be revoked.", problem.Detail);
     }
 
@@ -61,11 +59,11 @@ public sealed class RevokeRoleEndpointTests
         var actorUserId = context.EstablishOwner(accountingSubjectId);
         var userId = Guid.NewGuid();
         context.RecognizeUser(userId);
+        context.Client.AuthenticateAs(actorUserId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/authority/assign-role",
-            new AssignRoleCommand(
-                actorUserId,
+            new AssignRoleRequest(
                 userId,
                 accountingSubjectId,
                 Role.Owner));

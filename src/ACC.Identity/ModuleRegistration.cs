@@ -97,7 +97,7 @@ public static class ModuleRegistration
 
     public static IEndpointRouteBuilder MapIdentity(this IEndpointRouteBuilder endpoints)
     {
-        var identity = endpoints.MapGroup("/identity");
+        var identity = endpoints.MapGroup("/identity").AllowAnonymous();
 
         identity.MapIdentityEndpoints();
 

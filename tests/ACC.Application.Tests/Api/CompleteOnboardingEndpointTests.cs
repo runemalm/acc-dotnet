@@ -2,7 +2,9 @@ using System.Net;
 using System.Net.Http.Json;
 using ACC.AccountingSubject.Domain.Aggregates;
 using ACC.Application.Application.UseCases.CompleteOnboarding;
+using ACC.Application.Infrastructure.Endpoints;
 using ACC.Application.Tests.TestKit;
+using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -18,10 +20,11 @@ public sealed class CompleteOnboardingEndpointTests
         const string templateId = "se:bas:k1:2018";
         context.RecognizeUser(userId);
         context.AddTemplate(templateId, "BAS 2018 för K1");
+        context.Client.AuthenticateAs(userId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/onboarding/complete",
-            Command(userId, templateId));
+            Request(templateId));
 
         var result = await response.Content.ReadFromJsonAsync<CompleteOnboardingResult>();
         Assert.Equal(HttpStatusCode.Created, response.StatusCode);
@@ -33,25 +36,38 @@ public sealed class CompleteOnboardingEndpointTests
     }
 
     [Fact]
-    public async Task CompleteOnboarding_WithUnknownTemplate_ReturnsBadRequest()
+    public async Task CompleteOnboarding_WithUnknownTemplate_ReturnsNotFound()
     {
         await using var context = await ApplicationApiTestContext.Create();
         var userId = Guid.NewGuid();
         context.RecognizeUser(userId);
+        context.Client.AuthenticateAs(userId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/onboarding/complete",
-            Command(userId, "unknown-template"));
+            Request("unknown-template"));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.NotNull(problem);
         Assert.Contains("template unknown-template is not recognized", problem.Detail);
     }
 
-    private static CompleteOnboardingCommand Command(Guid userId, string templateId) =>
+    [Fact]
+    public async Task CompleteOnboarding_WithoutAuthentication_ReturnsUnauthorized()
+    {
+        await using var context = await ApplicationApiTestContext.Create();
+        context.Client.SignOut();
+
+        var response = await context.Client.PostAsJsonAsync(
+            "/onboarding/complete",
+            Request("se:bas:k1:2018"));
+
+        Assert.Equal(HttpStatusCode.Unauthorized, response.StatusCode);
+    }
+
+    private static CompleteOnboardingRequest Request(string templateId) =>
         new(
-            userId,
             "Example Business",
             "198001011234",
             AccountingSubjectType.EnskildFirma,

@@ -3,7 +3,7 @@ using ACC.AccountingSubject.Domain.Aggregates;
 namespace ACC.Application.Application.UseCases.CompleteOnboarding;
 
 public sealed record CompleteOnboardingCommand(
-    Guid UserId,
+    Guid ActorUserId,
     string AccountingSubjectName,
     string OrganizationNumber,
     AccountingSubjectType AccountingSubjectType,

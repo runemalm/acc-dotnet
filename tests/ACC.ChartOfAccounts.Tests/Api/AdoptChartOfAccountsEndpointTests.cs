@@ -1,7 +1,9 @@
 using System.Net;
 using System.Net.Http.Json;
 using ACC.ChartOfAccounts.Application.UseCases.AdoptChartOfAccounts;
+using ACC.ChartOfAccounts.Infrastructure.Endpoints;
 using ACC.ChartOfAccounts.Tests.TestKit;
+using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
@@ -18,11 +20,11 @@ public sealed class AdoptChartOfAccountsEndpointTests
         context.AddTemplate();
         context.RecognizeAccountingSubject(accountingSubjectId);
         context.AllowAdoption(actorUserId, accountingSubjectId);
+        context.Client.AuthenticateAs(actorUserId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/chart-of-accounts/adopt",
-            new AdoptChartOfAccountsCommand(
-                actorUserId,
+            new AdoptChartOfAccountsRequest(
                 accountingSubjectId,
                 "test-template"));
 
@@ -36,23 +38,23 @@ public sealed class AdoptChartOfAccountsEndpointTests
     }
 
     [Fact]
-    public async Task AdoptChartOfAccounts_WithUnknownTemplate_ReturnsBadRequest()
+    public async Task AdoptChartOfAccounts_WithUnknownTemplate_ReturnsNotFound()
     {
         await using var context = await ChartOfAccountsApiTestContext.Create();
         var accountingSubjectId = Guid.NewGuid();
         var actorUserId = Guid.NewGuid();
         context.RecognizeAccountingSubject(accountingSubjectId);
         context.AllowAdoption(actorUserId, accountingSubjectId);
+        context.Client.AuthenticateAs(actorUserId);
 
         var response = await context.Client.PostAsJsonAsync(
             "/chart-of-accounts/adopt",
-            new AdoptChartOfAccountsCommand(
-                actorUserId,
+            new AdoptChartOfAccountsRequest(
                 accountingSubjectId,
                 "unknown-template"));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.NotNull(problem);
         Assert.Contains("is not recognized", problem.Detail);
     }

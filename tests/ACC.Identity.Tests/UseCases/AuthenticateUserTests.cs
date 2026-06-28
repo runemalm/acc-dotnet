@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Application.UseCases.AuthenticateUser;
 using ACC.Identity.Application.UseCases.RegisterUser;
 using ACC.Identity.Tests.TestKit;
@@ -32,7 +33,7 @@ public sealed class AuthenticateUserTests
     {
         var context = new IdentityUseCaseTestContext();
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<AuthenticationFailedException>(() =>
             context.AuthenticateUser.Handle(
                 new AuthenticateUserCommand("missing@example.com", "correct horse battery staple"),
                 DateTimeOffset.UtcNow));
@@ -49,7 +50,7 @@ public sealed class AuthenticateUserTests
             new RegisterUserCommand("user@example.com", "correct horse battery staple"),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<AuthenticationFailedException>(() =>
             context.AuthenticateUser.Handle(
                 new AuthenticateUserCommand("user@example.com", "wrong password"),
                 DateTimeOffset.UtcNow));

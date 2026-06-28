@@ -1,6 +1,7 @@
 namespace ACC.Ledger.Application.UseCases.PostJournalEntry;
 
 public sealed record PostJournalEntryCommand(
+    Guid ActorUserId,
     Guid AccountingSubjectId,
     DateOnly AccountingDate,
     string Description,

@@ -1,4 +1,6 @@
 using ACC.ChartOfAccounts.Application.UseCases.AdoptChartOfAccounts;
+using ACC.BuildingBlocks.Authorization;
+using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Tests.TestKit;
 using Xunit;
 
@@ -42,7 +44,7 @@ public sealed class AdoptChartOfAccountsTests
         context.AdoptChart(accountingSubjectId, actorUserId);
         context.AddTemplate("another-template", "Another chart");
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<StateConflictException>(() =>
             context.AdoptChartOfAccounts.Handle(
                 new AdoptChartOfAccountsCommand(
                     actorUserId,
@@ -62,7 +64,7 @@ public sealed class AdoptChartOfAccountsTests
         var template = context.AddTemplate();
         context.RecognizeAccountingSubject(accountingSubjectId);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
             context.AdoptChartOfAccounts.Handle(
                 new AdoptChartOfAccountsCommand(
                     actorUserId,

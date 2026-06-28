@@ -1,4 +1,6 @@
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
+using ACC.BuildingBlocks.Authorization;
+using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Tests.TestKit;
@@ -12,16 +14,19 @@ public sealed class CloseFiscalPeriodTests
     public void GivenOpenFiscalPeriod_WhenClosing_ThenFiscalPeriodClosed()
     {
         var context = new LedgerUseCaseTestContext();
+        var actorUserId = Guid.NewGuid();
         var accountingSubjectId = Guid.NewGuid();
+        context.AllowAllLedgerActs(actorUserId, accountingSubjectId);
         var opened = context.OpenFiscalPeriod.Handle(
             new OpenFiscalPeriodCommand(
+                actorUserId,
                 accountingSubjectId,
                 new DateOnly(2026, 1, 1),
                 new DateOnly(2026, 12, 31)),
             DateTimeOffset.UtcNow);
 
         var closed = context.CloseFiscalPeriod.Handle(
-            new CloseFiscalPeriodCommand(opened.FiscalPeriodId),
+            new CloseFiscalPeriodCommand(actorUserId, opened.FiscalPeriodId),
             DateTimeOffset.UtcNow);
 
         var fiscalPeriod = context.FindFiscalPeriod(opened.FiscalPeriodId);
@@ -35,23 +40,49 @@ public sealed class CloseFiscalPeriodTests
     public void GivenClosedFiscalPeriod_WhenClosing_ThenFiscalPeriodMustBeOpenToCloseViolation()
     {
         var context = new LedgerUseCaseTestContext();
+        var actorUserId = Guid.NewGuid();
         var accountingSubjectId = Guid.NewGuid();
+        context.AllowAllLedgerActs(actorUserId, accountingSubjectId);
         var opened = context.OpenFiscalPeriod.Handle(
             new OpenFiscalPeriodCommand(
+                actorUserId,
                 accountingSubjectId,
                 new DateOnly(2026, 1, 1),
                 new DateOnly(2026, 12, 31)),
             DateTimeOffset.UtcNow);
 
         context.CloseFiscalPeriod.Handle(
-            new CloseFiscalPeriodCommand(opened.FiscalPeriodId),
+            new CloseFiscalPeriodCommand(actorUserId, opened.FiscalPeriodId),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<InvalidOperationException>(() =>
+        var exception = Assert.Throws<StateConflictException>(() =>
             context.CloseFiscalPeriod.Handle(
-                new CloseFiscalPeriodCommand(opened.FiscalPeriodId),
+                new CloseFiscalPeriodCommand(actorUserId, opened.FiscalPeriodId),
                 DateTimeOffset.UtcNow));
 
         Assert.Equal("A fiscal period must be open before it can be closed.", exception.Message);
+    }
+
+    [Fact]
+    public void GivenActorWithoutCloseFiscalPeriodPower_WhenClosing_ThenActorMustHavePowerViolation()
+    {
+        var context = new LedgerUseCaseTestContext();
+        var actorUserId = Guid.NewGuid();
+        var accountingSubjectId = Guid.NewGuid();
+        context.AllowOpeningFiscalPeriod(actorUserId, accountingSubjectId);
+        var opened = context.OpenFiscalPeriod.Handle(
+            new OpenFiscalPeriodCommand(
+                actorUserId,
+                accountingSubjectId,
+                new DateOnly(2026, 1, 1),
+                new DateOnly(2026, 12, 31)),
+            DateTimeOffset.UtcNow);
+
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+            context.CloseFiscalPeriod.Handle(
+                new CloseFiscalPeriodCommand(actorUserId, opened.FiscalPeriodId),
+                DateTimeOffset.UtcNow));
+
+        Assert.Contains("must have power to close a fiscal period", exception.Message);
     }
 }

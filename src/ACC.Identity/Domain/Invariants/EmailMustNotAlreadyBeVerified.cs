@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Domain.Aggregates;
 
 namespace ACC.Identity.Domain.Invariants;
@@ -10,7 +11,7 @@ public static class EmailMustNotAlreadyBeVerified
 
         if (user.EmailVerifiedAt is not null)
         {
-            throw new InvalidOperationException(
+            throw new StateConflictException(
                 "The user's email address has already been verified.");
         }
     }

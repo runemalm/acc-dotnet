@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Domain.Aggregates;
 
 namespace ACC.Identity.Domain.Invariants;
@@ -13,7 +14,7 @@ public static class EmailVerificationMustBeValid
             user.EmailVerificationTokenExpiresAt is null ||
             user.EmailVerificationTokenExpiresAt <= verifiedAt)
         {
-            throw new InvalidOperationException("Email verification must be valid.");
+            throw new SemanticViolationException("Email verification must be valid.");
         }
     }
 }

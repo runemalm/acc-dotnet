@@ -11,7 +11,12 @@ public sealed class RolePowerPolicy
                 Power.AssignRole or
                 Power.RevokeRole or
                 Power.AdoptChartOfAccounts or
-                Power.ManageChartOfAccounts,
+                Power.ManageChartOfAccounts or
+                Power.ViewChartOfAccounts or
+                Power.PostJournalEntry or
+                Power.ViewJournalEntry or
+                Power.OpenFiscalPeriod or
+                Power.CloseFiscalPeriod,
             _ => false
         };
 }

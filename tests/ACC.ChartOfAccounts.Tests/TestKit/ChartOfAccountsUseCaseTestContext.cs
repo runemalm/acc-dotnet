@@ -38,7 +38,10 @@ internal sealed class ChartOfAccountsUseCaseTestContext
         AddAccount = new AddAccountHandler(charts, authority, projection);
         DeactivateAccount = new DeactivateAccountHandler(charts, authority, projection);
         ReactivateAccount = new ReactivateAccountHandler(charts, authority, projection);
-        ViewChartOfAccounts = new ViewChartOfAccountsHandler(chartStore, accountStore);
+        ViewChartOfAccounts = new ViewChartOfAccountsHandler(
+            chartStore,
+            accountStore,
+            authority);
         ViewChartOfAccountsTemplates = new ViewChartOfAccountsTemplatesHandler(templates);
     }
 
@@ -78,6 +81,9 @@ internal sealed class ChartOfAccountsUseCaseTestContext
     public void AllowManagement(Guid actorUserId, Guid accountingSubjectId) =>
         authority.AllowManagement(actorUserId, accountingSubjectId);
 
+    public void AllowViewing(Guid actorUserId, Guid accountingSubjectId) =>
+        authority.AllowViewing(actorUserId, accountingSubjectId);
+
     public Guid AdoptChart(Guid accountingSubjectId, Guid actorUserId)
     {
         const string templateId = "test-template";
@@ -85,6 +91,7 @@ internal sealed class ChartOfAccountsUseCaseTestContext
         RecognizeAccountingSubject(accountingSubjectId);
         AllowAdoption(actorUserId, accountingSubjectId);
         AllowManagement(actorUserId, accountingSubjectId);
+        AllowViewing(actorUserId, accountingSubjectId);
 
         return AdoptChartOfAccounts.Handle(
             new AdoptChartOfAccountsCommand(actorUserId, accountingSubjectId, templateId),

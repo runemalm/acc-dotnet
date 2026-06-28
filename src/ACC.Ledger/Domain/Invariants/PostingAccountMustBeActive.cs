@@ -1,3 +1,5 @@
+using ACC.BuildingBlocks.Failures;
+
 namespace ACC.Ledger.Domain.Invariants;
 
 public static class PostingAccountMustBeActive
@@ -8,7 +10,7 @@ public static class PostingAccountMustBeActive
     {
         if (!isActive)
         {
-            throw new InvalidOperationException(
+            throw new StateConflictException(
                 $"Account {accountNumber} must be active in the accounting subject's operative chart before it can receive postings.");
         }
     }

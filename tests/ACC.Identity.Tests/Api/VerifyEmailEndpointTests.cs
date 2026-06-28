@@ -29,7 +29,7 @@ public sealed class VerifyEmailEndpointTests
     }
 
     [Fact]
-    public async Task VerifyEmail_WithInvalidToken_ReturnsBadRequest()
+    public async Task VerifyEmail_WithInvalidToken_ReturnsUnprocessableEntity()
     {
         await using var context = await IdentityApiTestContext.Create();
 
@@ -39,9 +39,9 @@ public sealed class VerifyEmailEndpointTests
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.NotNull(problem);
-        Assert.Equal((int)HttpStatusCode.BadRequest, problem.Status);
+        Assert.Equal((int)HttpStatusCode.UnprocessableEntity, problem.Status);
         Assert.Equal("Email verification must be valid.", problem.Detail);
     }
 }

@@ -1,6 +1,7 @@
 using System.Net;
 using System.Net.Http.Json;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
+using ACC.Ledger.Infrastructure.Endpoints;
 using ACC.Ledger.Tests.TestKit;
 using Microsoft.AspNetCore.Mvc;
 using Xunit;
@@ -16,7 +17,7 @@ public sealed class OpenFiscalPeriodEndpointTests
 
         var response = await context.Client.PostAsJsonAsync(
             "/ledger/fiscal-periods",
-            new OpenFiscalPeriodCommand(
+            new OpenFiscalPeriodRequest(
                 Guid.NewGuid(),
                 new DateOnly(2026, 1, 1),
                 new DateOnly(2026, 12, 31)));
@@ -32,21 +33,21 @@ public sealed class OpenFiscalPeriodEndpointTests
     }
 
     [Fact]
-    public async Task OpenFiscalPeriod_WithInvalidPeriod_ReturnsBadRequest()
+    public async Task OpenFiscalPeriod_WithInvalidPeriod_ReturnsUnprocessableEntity()
     {
         await using var context = await LedgerApiTestContext.Create();
 
         var response = await context.Client.PostAsJsonAsync(
             "/ledger/fiscal-periods",
-            new OpenFiscalPeriodCommand(
+            new OpenFiscalPeriodRequest(
                 Guid.NewGuid(),
                 new DateOnly(2026, 12, 31),
                 new DateOnly(2026, 1, 1)));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
 
-        Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
         Assert.NotNull(problem);
-        Assert.Equal((int)HttpStatusCode.BadRequest, problem.Status);
+        Assert.Equal((int)HttpStatusCode.UnprocessableEntity, problem.Status);
     }
 }

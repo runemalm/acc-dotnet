@@ -1,3 +1,5 @@
+using ACC.BuildingBlocks.Failures;
+
 namespace ACC.Ledger.Domain.Invariants;
 
 public static class PostingAccountMustBeRecognized
@@ -8,7 +10,7 @@ public static class PostingAccountMustBeRecognized
     {
         if (!isRecognized)
         {
-            throw new InvalidOperationException(
+            throw new SemanticViolationException(
                 $"Account {accountNumber} must be recognized by the accounting subject's operative chart before it can receive postings.");
         }
     }

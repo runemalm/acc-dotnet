@@ -2,7 +2,10 @@ using System.Net;
 using System.Net.Http.Json;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
 using ACC.Ledger.Application.UseCases.ViewJournalEntry;
+using ACC.Ledger.Infrastructure.Endpoints;
 using ACC.Ledger.Tests.TestKit;
+using ACC.Testing.Authentication;
+using Microsoft.AspNetCore.Mvc;
 using Xunit;
 
 namespace ACC.Ledger.Tests.Api;
@@ -35,6 +38,7 @@ public sealed class ViewJournalEntryEndpointTests
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         Assert.NotNull(journalEntry);
         Assert.Equal(postedResult.JournalEntryId, journalEntry.JournalEntryId);
+        Assert.Equal(accountingSubjectId, journalEntry.AccountingSubjectId);
         Assert.Equal(accountingDate, journalEntry.AccountingDate);
         Assert.Equal("Initial capital contribution", journalEntry.Description);
         Assert.Equal(2, journalEntry.Lines.Count);
@@ -50,7 +54,36 @@ public sealed class ViewJournalEntryEndpointTests
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
     }
 
-    private static PostJournalEntryCommand BalancedJournalEntry(
+    [Fact]
+    public async Task ViewJournalEntry_WithoutViewPower_ReturnsForbidden()
+    {
+        await using var context = await LedgerApiTestContext.Create();
+        var accountingSubjectId = Guid.NewGuid();
+        var accountingDate = new DateOnly(2026, 6, 10);
+        context.OpenFiscalPeriod(
+            accountingSubjectId,
+            new DateOnly(2026, 1, 1),
+            new DateOnly(2026, 12, 31));
+        context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
+        var posted = await context.Client.PostAsJsonAsync(
+            "/ledger/journal-entries",
+            BalancedJournalEntry(accountingSubjectId, accountingDate));
+        var postedResult = await posted.Content.ReadFromJsonAsync<PostJournalEntryResult>();
+        var viewingActorUserId = Guid.NewGuid();
+        context.DenyViewingJournalEntries(viewingActorUserId, accountingSubjectId);
+        context.Client.AuthenticateAs(viewingActorUserId);
+
+        var response = await context.Client.GetAsync(
+            $"/ledger/journal-entries/{postedResult!.JournalEntryId}");
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+        Assert.Equal(HttpStatusCode.Forbidden, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal((int)HttpStatusCode.Forbidden, problem.Status);
+        Assert.Contains("must have power to view a journal entry", problem.Detail);
+    }
+
+    private static PostJournalEntryRequest BalancedJournalEntry(
         Guid accountingSubjectId,
         DateOnly accountingDate) =>
         new(
@@ -58,7 +91,7 @@ public sealed class ViewJournalEntryEndpointTests
             accountingDate,
             "Initial capital contribution",
             [
-                new PostJournalEntryCommandLine("Cash", 1000m, 0m),
-                new PostJournalEntryCommandLine("Owner Equity", 0m, 1000m)
+                new PostJournalEntryRequestLine("Cash", 1000m, 0m),
+                new PostJournalEntryRequestLine("Owner Equity", 0m, 1000m)
             ]);
 }

@@ -1,4 +1,5 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Domain.Events;
 using ACC.ChartOfAccounts.Domain.Invariants;
 using ACC.ChartOfAccounts.Domain.Templates;
@@ -53,7 +54,7 @@ public sealed class ChartOfAccounts : EventSourcedAggregate
 
         if (!account.IsActive)
         {
-            throw new InvalidOperationException($"Account {accountNumber} is already inactive.");
+            throw new StateConflictException($"Account {accountNumber} is already inactive.");
         }
 
         Raise(new AccountDeactivated(
@@ -74,7 +75,7 @@ public sealed class ChartOfAccounts : EventSourcedAggregate
 
         if (account.IsActive)
         {
-            throw new InvalidOperationException($"Account {accountNumber} is already active.");
+            throw new StateConflictException($"Account {accountNumber} is already active.");
         }
 
         Raise(new AccountReactivated(
@@ -162,7 +163,7 @@ public sealed class ChartOfAccounts : EventSourcedAggregate
         ArgumentException.ThrowIfNullOrWhiteSpace(accountNumber);
 
         return accounts.GetValueOrDefault(accountNumber)
-            ?? throw new InvalidOperationException($"Account {accountNumber} is not recognized by the chart of accounts.");
+            ?? throw new ResourceNotFoundException($"Account {accountNumber} is not recognized by the chart of accounts.");
     }
 
     private void Apply(ChartOfAccountsAdopted domainEvent)

@@ -32,7 +32,8 @@ flowchart LR
     Actor -->|performs| AssignRole
     Actor -->|performs| EstablishInitialOwner
     Actor -->|performs| RevokeRole
-    ViewUserRoles -->|observes| RoleAssignment
+    Actor -->|performs| ViewUserRoles
+    ViewUserRoles -->|observes own| RoleAssignment
 
     RoleAssignment -->|assigned to| User
     RoleAssignment -->|applies to| AccountingSubject
@@ -54,7 +55,7 @@ flowchart LR
 | EstablishInitialOwner | Establishes the founding Owner role for a newly created accounting subject. |
 | AssignRole | Grants a role to a user for an accounting subject by an acting user. |
 | RevokeRole | Revokes a previously assigned role by an acting user. |
-| ViewUserRoles | Shows the roles assigned to a user. |
+| ViewUserRoles | Shows an authenticated user their own active role assignments across accounting subjects. |
 
 ## Powers
 
@@ -64,6 +65,11 @@ flowchart LR
 | RevokeRole | The capacity to end a role assignment for an accounting subject. |
 | AdoptChartOfAccounts | The capacity to establish an operative chart of accounts for an accounting subject. |
 | ManageChartOfAccounts | The capacity to add, deactivate, and reactivate accounts in an operative chart. |
+| ViewChartOfAccounts | The capacity to view the operative chart belonging to an accounting subject. |
+| PostJournalEntry | The capacity to record a journal entry in the ledger. |
+| ViewJournalEntry | The capacity to view a journal entry belonging to an accounting subject. |
+| OpenFiscalPeriod | The capacity to open a fiscal period for posting. |
+| CloseFiscalPeriod | The capacity to close a fiscal period for posting. |
 
 ## Events
 

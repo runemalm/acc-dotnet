@@ -42,6 +42,7 @@ public sealed class RegisterUserHandler
         ArgumentNullException.ThrowIfNull(command);
 
         var email = command.Email;
+        UserEmailMustBeValid.Ensure(email);
         var normalizedEmail = NormalizeEmail(email);
 
         UserEmailMustBeUnique.Ensure(

@@ -13,5 +13,6 @@
 
   <ItemGroup>
     <ProjectReference Include="../../src/ACC.Authority/ACC.Authority.csproj" />
+    <ProjectReference Include="../ACC.Testing/ACC.Testing.csproj" />
   </ItemGroup>
 </Project>

@@ -2,6 +2,7 @@ using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.EventSourcing.Memory;
 using ACC.BuildingBlocks.EventSourcing.Postgres;
 using ACC.Ledger.Application.Ports.ChartOfAccounts;
+using ACC.Ledger.Application.Ports.Authority;
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
@@ -11,6 +12,7 @@ using ACC.Ledger.Application.Ports.ReadModels.JournalEntry;
 using ACC.Ledger.Application.Ports.ReadModels.TrialBalance;
 using ACC.Ledger.Infrastructure.Endpoints;
 using ACC.Ledger.Infrastructure.Adapters.ChartOfAccounts;
+using ACC.Ledger.Infrastructure.Adapters.Authority;
 using ACC.Ledger.Infrastructure.ReadModels.FiscalPeriod;
 using ACC.Ledger.Infrastructure.ReadModels.JournalEntry;
 using ACC.Ledger.Domain.Aggregates;
@@ -57,6 +59,7 @@ public static class ModuleRegistration
         services.AddTransient<OpenFiscalPeriodHandler>();
         services.AddTransient<CloseFiscalPeriodHandler>();
         services.AddTransient<IAccountAvailabilityPort, AccountAvailabilityAdapter>();
+        services.AddTransient<ILedgerAuthorityPort, LedgerAuthorityAdapter>();
 
         return services;
     }
@@ -83,7 +86,7 @@ public static class ModuleRegistration
 
     public static IEndpointRouteBuilder MapLedger(this IEndpointRouteBuilder endpoints)
     {
-        var ledger = endpoints.MapGroup("/ledger");
+        var ledger = endpoints.MapGroup("/ledger").RequireAuthorization();
 
         ledger.MapLedgerEndpoints();
 

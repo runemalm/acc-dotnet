@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Domain.Aggregates;
 
 namespace ACC.Identity.Domain.Invariants;
@@ -10,7 +11,7 @@ public static class UserMustBeActiveToAuthenticate
 
         if (!user.IsActive)
         {
-            throw new InvalidOperationException("User must be active to authenticate.");
+            throw new AuthenticationFailedException("Authentication must be valid.");
         }
     }
 }

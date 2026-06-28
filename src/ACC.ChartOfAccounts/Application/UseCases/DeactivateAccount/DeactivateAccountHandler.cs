@@ -1,4 +1,5 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Application.Ports.Authority;
 using ACC.ChartOfAccounts.Domain.Events;
 using ACC.ChartOfAccounts.Domain.Invariants;
@@ -44,7 +45,7 @@ public sealed class DeactivateAccountHandler
 
     private Domain.Aggregates.ChartOfAccounts LoadChart(Guid chartOfAccountsId)
         => charts.Find(ChartStream(chartOfAccountsId))
-           ?? throw new InvalidOperationException(
+           ?? throw new ResourceNotFoundException(
                $"Chart of accounts {chartOfAccountsId} could not be found.");
 
     private static StreamId ChartStream(Guid chartOfAccountsId) =>

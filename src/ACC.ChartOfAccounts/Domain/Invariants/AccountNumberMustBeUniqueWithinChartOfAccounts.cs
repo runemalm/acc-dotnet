@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Domain.Aggregates;
 
 namespace ACC.ChartOfAccounts.Domain.Invariants;
@@ -11,7 +12,7 @@ public static class AccountNumberMustBeUniqueWithinChartOfAccounts
 
         if (accounts.Any(account => account.Number == accountNumber))
         {
-            throw new InvalidOperationException(
+            throw new StateConflictException(
                 $"Account number {accountNumber} must be unique within the chart of accounts.");
         }
     }
@@ -26,7 +27,7 @@ public static class AccountNumberMustBeUniqueWithinChartOfAccounts
 
         if (duplicate is not null)
         {
-            throw new InvalidOperationException(
+            throw new StateConflictException(
                 $"Account number {duplicate.Key} must be unique within the chart of accounts.");
         }
     }

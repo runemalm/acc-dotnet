@@ -14,6 +14,7 @@ public sealed class JournalEntry : EventSourcedAggregate
 
     private static void EnsureCanPost(
         Guid id,
+        Guid accountingSubjectId,
         DateOnly accountingDate,
         string description,
         IReadOnlyCollection<JournalEntryLine> lines,
@@ -25,6 +26,13 @@ public sealed class JournalEntry : EventSourcedAggregate
         if (id == Guid.Empty)
         {
             throw new ArgumentException("A journal entry must have an identity.", nameof(id));
+        }
+
+        if (accountingSubjectId == Guid.Empty)
+        {
+            throw new ArgumentException(
+                "A journal entry must belong to an accounting subject.",
+                nameof(accountingSubjectId));
         }
 
         if (string.IsNullOrWhiteSpace(description))
@@ -45,6 +53,7 @@ public sealed class JournalEntry : EventSourcedAggregate
         var journalEntry = new JournalEntry
         {
             Id = id,
+            AccountingSubjectId = accountingSubjectId,
             AccountingDate = accountingDate,
             Description = description,
             Lines = lines.ToArray()
@@ -55,6 +64,8 @@ public sealed class JournalEntry : EventSourcedAggregate
     }
 
     public Guid Id { get; private set; }
+
+    public Guid AccountingSubjectId { get; private set; }
 
     public DateOnly AccountingDate { get; private set; }
 
@@ -68,17 +79,19 @@ public sealed class JournalEntry : EventSourcedAggregate
 
     public static JournalEntry Posted(
         Guid id,
+        Guid accountingSubjectId,
         DateOnly accountingDate,
         string description,
         IReadOnlyCollection<JournalEntryLine> lines,
         FiscalPeriod? fiscalPeriod,
         DateTimeOffset occurredAt)
     {
-        EnsureCanPost(id, accountingDate, description, lines, fiscalPeriod);
+        EnsureCanPost(id, accountingSubjectId, accountingDate, description, lines, fiscalPeriod);
 
         var journalEntry = new JournalEntry();
         journalEntry.Raise(new JournalEntryPosted(
             id,
+            accountingSubjectId,
             accountingDate,
             description,
             lines,
@@ -108,6 +121,7 @@ public sealed class JournalEntry : EventSourcedAggregate
     private void Apply(JournalEntryPosted domainEvent)
     {
         Id = domainEvent.JournalEntryId;
+        AccountingSubjectId = domainEvent.AccountingSubjectId;
         AccountingDate = domainEvent.AccountingDate;
         Description = domainEvent.Description;
         Lines = domainEvent.Lines.ToArray();

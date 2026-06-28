@@ -1,4 +1,5 @@
 using ACC.ChartOfAccounts.Application.UseCases.ViewChartOfAccounts;
+using ACC.BuildingBlocks.Authorization;
 using ACC.ChartOfAccounts.Tests.TestKit;
 using Xunit;
 
@@ -15,7 +16,7 @@ public sealed class ViewChartOfAccountsTests
         var chartOfAccountsId = context.AdoptChart(accountingSubjectId, actorUserId);
 
         var response = context.ViewChartOfAccounts.Handle(
-            new ViewChartOfAccountsQuery(accountingSubjectId));
+            new ViewChartOfAccountsQuery(actorUserId, accountingSubjectId));
 
         Assert.NotNull(response);
         Assert.Equal(chartOfAccountsId, response.ChartOfAccountsId);
@@ -23,5 +24,21 @@ public sealed class ViewChartOfAccountsTests
         Assert.Equal("test-template", response.Template.Id);
         Assert.Equal("Test chart of accounts", response.Template.Name);
         Assert.Equal(2, response.Accounts.Count);
+    }
+
+    [Fact]
+    public void GivenActorWithoutViewChartOfAccountsPower_WhenViewing_ThenActorMustHavePowerViolation()
+    {
+        var context = new ChartOfAccountsUseCaseTestContext();
+        var adoptingActorUserId = Guid.NewGuid();
+        var viewingActorUserId = Guid.NewGuid();
+        var accountingSubjectId = Guid.NewGuid();
+        context.AdoptChart(accountingSubjectId, adoptingActorUserId);
+
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+            context.ViewChartOfAccounts.Handle(
+                new ViewChartOfAccountsQuery(viewingActorUserId, accountingSubjectId)));
+
+        Assert.Contains("must have power to view a chart of accounts", exception.Message);
     }
 }

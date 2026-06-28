@@ -34,8 +34,8 @@ flowchart LR
 | AddAccount | Introduces a locally defined account without reassigning an existing account number. |
 | DeactivateAccount | Ends an account's availability for future posting while preserving its identity and history. |
 | ReactivateAccount | Restores a previously deactivated account's availability for future posting. |
-| ViewChartOfAccountsTemplates | Shows the chart-of-accounts templates currently available for adoption. |
-| ViewChartOfAccounts | Shows the adopted chart and its current account classifications. |
+| ViewChartOfAccountsTemplates | Shows authenticated users the chart-of-accounts templates currently available for adoption. |
+| ViewChartOfAccounts | Shows an empowered actor the adopted chart and current account classifications for an accounting subject. |
 
 ## Events
 
@@ -52,7 +52,7 @@ flowchart LR
 | --- | --- |
 | AccountingSubjectMustHaveAtMostOneOperativeChartOfAccounts | An accounting subject cannot use competing operative general-ledger charts at the same time. |
 | AccountNumberMustBeUniqueWithinChartOfAccounts | An account number identifies no more than one classification within a chart, including inactive accounts. |
-| ActorMustHaveChartOfAccountsPower | Adoption and modification are valid only when performed by an actor with the required institutional power. |
+| ActorMustHaveChartOfAccountsPower | Adoption, modification, and viewing are valid only when performed by an actor with the required institutional power. |
 
 ## Templates
 

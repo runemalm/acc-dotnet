@@ -6,6 +6,7 @@
   <ItemGroup>
     <ProjectReference Include="../ACC.AccountingSubject/ACC.AccountingSubject.csproj" />
     <ProjectReference Include="../ACC.Authority/ACC.Authority.csproj" />
+    <ProjectReference Include="../ACC.BuildingBlocks/ACC.BuildingBlocks.csproj" />
     <ProjectReference Include="../ACC.ChartOfAccounts/ACC.ChartOfAccounts.csproj" />
   </ItemGroup>
 </Project>

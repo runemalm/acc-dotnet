@@ -1,72 +1,85 @@
 # ACC.NET
 
-A modular accounting system built with .NET, Domain-Driven Design, CQRS and Event Sourcing.
+An accounting system built with C#/.NET.
+
+## Purpose
+
+The project exists to:
+
+- Discover the accounting domain through institutional theory.
+- Build an accounting system from that understanding.
+- Develop the system into a commercially viable product.
 
 ## Status
 
-ACC.NET is under active development.
+The MVP is under active development.
 
-Current focus is on implementing a minimal set of use cases for a minimum accounting application.
+## Context Map
 
-## Domain Model
-
-The diagram below summarizes the current semantic model of subdomains, bounded contexts, and relationships between them. Solid nodes represent currently implemented contexts. Dashed nodes represent planned or placeholder contexts.
+The map shows the current bounded contexts and their principal relationships.
 
 ```mermaid
 flowchart TB
-    subgraph IF["Identity & Access Subdomain"]
-        Identity["Identity"]
-        Authority["Authority"]
-        Accountability["Accountability"]
-    end
+    Identity["Identity"]
+    Authority["Authority"]
+    AccountingSubject["Accounting Subject"]
+    ChartOfAccounts["Chart of Accounts"]
+    Ledger["Ledger"]
+    Evidence["Evidence"]
+    Receivables["Receivables"]
+    Payables["Payables"]
+    Reporting["Reporting"]
+    VAT["VAT"]
+    Audit["Audit"]
 
-    subgraph AC["Accounting Subdomain"]
-        AccountingSubject["Accounting Subject"]
-        ChartOfAccounts["Chart of Accounts"]
-        Ledger["Ledger"]
-        Evidence["Evidence"]
-        Reporting["Reporting"]
-        Receivables["Receivables"]
-        Payables["Payables"]
-    end
-
-    subgraph TX["Taxation Subdomain"]
-        VAT["VAT"]
-        TaxDeclarations["Tax Declarations"]
-    end
-
-    AccountingSubject -->|defines accounting scope| Ledger
+    Identity -->|identifies users for| Authority
+    AccountingSubject -->|is recognized by| Authority
+    AccountingSubject -->|defines accounting scope for| Ledger
     AccountingSubject -->|adopts| ChartOfAccounts
-    ChartOfAccounts -->|defines accounts for| Ledger
-    Authority -->|requires recognized users from| Identity
-    Authority -->|requires recognized subjects from| AccountingSubject
-    Authority -->|authorizes acts| ChartOfAccounts
-    Authority -->|authorizes acts| Ledger
+    Authority -->|authorizes acts in| ChartOfAccounts
+    Authority -->|authorizes acts in| Ledger
+    ChartOfAccounts -->|defines posting accounts for| Ledger
 
-    classDef planned stroke-dasharray: 5 5,color:#666,stroke:#999,fill:#fff
-    class Accountability,Evidence,Reporting,Receivables,Payables,VAT,TaxDeclarations planned
+    Evidence -.-> Ledger
+    Receivables -.-> Ledger
+    Payables -.-> Ledger
+    Ledger -.-> Reporting
+    Ledger -.-> VAT
+    Ledger -.-> Audit
+
+    classDef placeholder stroke-dasharray: 5 5,color:#666,stroke:#999,fill:#fff
+    class Evidence,Receivables,Payables,Reporting,VAT,Audit placeholder
 ```
 
-## Architecture
+## Context Catalogs
 
-ACC.NET is implemented as a modular monolith with bounded-context modules composed by `ACC.Host` and founded on `ACC.BuildingBlocks`.
+- [Identity](src/ACC.Identity/README.md)
+- [Authority](src/ACC.Authority/README.md)
+- [Chart of Accounts](src/ACC.ChartOfAccounts/README.md)
+- [Ledger](src/ACC.Ledger/README.md)
 
-## Current Capabilities
+## Architecture & Design
 
-ACC.NET currently includes early support for:
+- Domain-Driven Design
+- Hexagonal Architecture
+- CQRS
+- Event Sourcing
+- Modular Monolith
 
-- registering and authenticating users
-- verifying and resending email verification
-- completing onboarding with a selected chart-of-accounts template
-- creating accounting subjects
-- adopting and managing charts of accounts from configured templates
-- establishing initial owner authority
-- assigning and revoking authority roles
-- viewing user roles
-- opening and closing fiscal periods
-- posting journal entries to active accounts in the operative chart and viewing them
+## Roadmap
 
-We are still in an early phase, more capabilities will be added incrementally over time.
+- [x] User registration, email verification, and authentication
+- [x] Accounting-subject creation and onboarding
+- [x] Ownership, role assignment, and authority
+- [x] Chart-of-accounts adoption and management
+- [x] Fiscal-period management
+- [x] Journal-entry posting and viewing
+- [ ] Evidence
+- [ ] Receivables
+- [ ] Payables
+- [ ] Reporting
+- [ ] VAT
+- [ ] Auditing
 
 ## Repository Structure
 
@@ -102,8 +115,6 @@ tools/
 └─ ACC.Bas.Tooling.Tests
 ```
 
-
-
 ## Requirements
 
 - .NET SDK 10
@@ -126,9 +137,7 @@ dotnet test acc-dotnet.slnx
 dotnet run --project src/ACC.Host/ACC.Host.csproj
 ```
 
-## API
-
-When running in Development, explore the API at [http://localhost:5000/swagger](http://localhost:5000/swagger).
+Explore the API documentation at [http://localhost:5000/swagger](http://localhost:5000/swagger).
 
 ## License
 

@@ -1,5 +1,5 @@
-using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Domain.Aggregates;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Identity.Domain.Invariants;
 
@@ -11,8 +11,10 @@ public static class EmailMustNotAlreadyBeVerified
 
         if (user.EmailVerifiedAt is not null)
         {
-            throw new StateConflictException(
-                "The user's email address has already been verified.");
+            throw new EmailMustNotAlreadyBeVerifiedViolation();
         }
     }
 }
+
+public sealed class EmailMustNotAlreadyBeVerifiedViolation()
+    : InvariantViolationException("The user's email address has already been verified.");

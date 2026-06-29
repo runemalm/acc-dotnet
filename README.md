@@ -137,7 +137,11 @@ dotnet test acc-dotnet.slnx
 dotnet run --project src/ACC.Host/ACC.Host.csproj
 ```
 
-Explore the API documentation at [http://localhost:5000/swagger](http://localhost:5000/swagger).
+Explore the API documentation at [http://localhost:5055/swagger](http://localhost:5055/swagger).
+
+## Acknowledgements
+
+Thank you to Eric Evans and Vaughn Vernon for their foundational work on Domain-Driven Design. Their ideas strongly influence how ACC.NET approaches domain discovery, modeling, and software design.
 
 ## License
 

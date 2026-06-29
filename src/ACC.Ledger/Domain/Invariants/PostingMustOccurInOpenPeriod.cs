@@ -1,5 +1,5 @@
-using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Domain.Aggregates;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Ledger.Domain.Invariants;
 
@@ -9,7 +9,7 @@ public static class PostingMustOccurInOpenPeriod
     {
         if (fiscalPeriod is null)
         {
-            throw new StateConflictException(
+            throw new PostingMustOccurInOpenPeriodViolation(
                 $"Journal entry cannot be posted on {accountingDate} because no fiscal period contains that date.");
         }
 
@@ -21,8 +21,11 @@ public static class PostingMustOccurInOpenPeriod
 
         if (!fiscalPeriod.IsOpen)
         {
-            throw new StateConflictException(
+            throw new PostingMustOccurInOpenPeriodViolation(
                 $"Journal entry cannot be posted on {accountingDate} because the fiscal period is not open.");
         }
     }
 }
+
+public sealed class PostingMustOccurInOpenPeriodViolation(string message)
+    : InvariantViolationException(message);

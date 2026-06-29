@@ -1,4 +1,4 @@
-using ACC.BuildingBlocks.Authorization;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Ledger.Domain.Invariants;
 
@@ -8,8 +8,10 @@ public static class ActorMustHaveLedgerPower
     {
         if (!hasPower)
         {
-            throw new AuthorizationDeniedException(
-                $"User {actorUserId} must have power to {act}.");
+            throw new ActorMustHaveLedgerPowerViolation(actorUserId, act);
         }
     }
 }
+
+public sealed class ActorMustHaveLedgerPowerViolation(Guid actorUserId, string act)
+    : InvariantViolationException($"User {actorUserId} must have power to {act}.");

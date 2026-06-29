@@ -1,5 +1,5 @@
-using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Domain.Aggregates;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Ledger.Domain.Invariants;
 
@@ -11,7 +11,10 @@ public static class FiscalPeriodMustBeOpenToClose
 
         if (!fiscalPeriod.IsOpen)
         {
-            throw new StateConflictException("A fiscal period must be open before it can be closed.");
+            throw new FiscalPeriodMustBeOpenToCloseViolation();
         }
     }
 }
+
+public sealed class FiscalPeriodMustBeOpenToCloseViolation()
+    : InvariantViolationException("A fiscal period must be open before it can be closed.");

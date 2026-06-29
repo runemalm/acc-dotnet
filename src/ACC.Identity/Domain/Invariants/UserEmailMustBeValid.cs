@@ -1,6 +1,5 @@
 using System.Net.Mail;
-
-using ACC.BuildingBlocks.Failures;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Identity.Domain.Invariants;
 
@@ -10,7 +9,7 @@ public static class UserEmailMustBeValid
     {
         if (string.IsNullOrWhiteSpace(email))
         {
-            throw new SemanticViolationException("A user email address must be valid.");
+            throw new UserEmailMustBeValidViolation();
         }
 
         try
@@ -24,7 +23,10 @@ public static class UserEmailMustBeValid
         }
         catch (FormatException)
         {
-            throw new SemanticViolationException("A user email address must be valid.");
+            throw new UserEmailMustBeValidViolation();
         }
     }
 }
+
+public sealed class UserEmailMustBeValidViolation()
+    : InvariantViolationException("A user email address must be valid.");

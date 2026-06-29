@@ -1,5 +1,5 @@
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
-using ACC.BuildingBlocks.Authorization;
+using ACC.Ledger.Domain.Invariants;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
 using ACC.Ledger.Application.UseCases.ViewJournalEntry;
 using ACC.Ledger.Tests.TestKit;
@@ -34,7 +34,7 @@ public sealed class ViewJournalEntryTests
         var accountingSubjectId = Guid.NewGuid();
         var journalEntryId = PostJournalEntry(context, postingActorUserId, accountingSubjectId);
 
-        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+        var exception = Assert.Throws<ActorMustHaveLedgerPowerViolation>(() =>
             context.ViewJournalEntry.Handle(
                 new ViewJournalEntryQuery(viewingActorUserId, journalEntryId)));
 

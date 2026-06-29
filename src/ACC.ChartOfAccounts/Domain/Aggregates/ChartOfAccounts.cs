@@ -1,5 +1,4 @@
 using ACC.BuildingBlocks.EventSourcing;
-using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Domain.Events;
 using ACC.ChartOfAccounts.Domain.Invariants;
 using ACC.ChartOfAccounts.Domain.Templates;
@@ -52,10 +51,7 @@ public sealed class ChartOfAccounts : EventSourcedAggregate
         EnsureActor(deactivatedByUserId);
         var account = FindAccount(accountNumber);
 
-        if (!account.IsActive)
-        {
-            throw new StateConflictException($"Account {accountNumber} is already inactive.");
-        }
+        AccountMustBeActiveToDeactivate.Ensure(account);
 
         Raise(new AccountDeactivated(
             Id,
@@ -73,10 +69,7 @@ public sealed class ChartOfAccounts : EventSourcedAggregate
         EnsureActor(reactivatedByUserId);
         var account = FindAccount(accountNumber);
 
-        if (account.IsActive)
-        {
-            throw new StateConflictException($"Account {accountNumber} is already active.");
-        }
+        AccountMustBeInactiveToReactivate.Ensure(account);
 
         Raise(new AccountReactivated(
             Id,
@@ -161,9 +154,11 @@ public sealed class ChartOfAccounts : EventSourcedAggregate
     private Account FindAccount(string accountNumber)
     {
         ArgumentException.ThrowIfNullOrWhiteSpace(accountNumber);
+        AccountMustBeRecognizedByChartOfAccounts.Ensure(
+            accounts.ContainsKey(accountNumber),
+            accountNumber);
 
-        return accounts.GetValueOrDefault(accountNumber)
-            ?? throw new ResourceNotFoundException($"Account {accountNumber} is not recognized by the chart of accounts.");
+        return accounts[accountNumber];
     }
 
     private void Apply(ChartOfAccountsAdopted domainEvent)

@@ -1,4 +1,4 @@
-using ACC.BuildingBlocks.Failures;
+using ACC.BuildingBlocks.Domain;
 using ACC.Identity.Domain.Aggregates;
 
 namespace ACC.Identity.Domain.Invariants;
@@ -11,7 +11,10 @@ public static class UserMustBeActiveToAuthenticate
 
         if (!user.IsActive)
         {
-            throw new AuthenticationFailedException("Authentication must be valid.");
+            throw new UserMustBeActiveToAuthenticateViolation();
         }
     }
 }
+
+public sealed class UserMustBeActiveToAuthenticateViolation()
+    : InvariantViolationException("Authentication must be valid.");

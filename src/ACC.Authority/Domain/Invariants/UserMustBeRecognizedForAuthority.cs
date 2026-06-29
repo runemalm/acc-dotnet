@@ -1,4 +1,4 @@
-using ACC.BuildingBlocks.Failures;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Authority.Domain.Invariants;
 
@@ -8,8 +8,11 @@ public static class UserMustBeRecognizedForAuthority
     {
         if (!isRecognized)
         {
-            throw new ResourceNotFoundException(
-                $"User {userId} must be recognized before authority can be assigned.");
+            throw new UserMustBeRecognizedForAuthorityViolation(userId);
         }
     }
 }
+
+public sealed class UserMustBeRecognizedForAuthorityViolation(Guid userId)
+    : InvariantViolationException(
+        $"User {userId} must be recognized before authority can be assigned.");

@@ -1,5 +1,6 @@
 using ACC.Identity.Application.Ports.Communication;
 using ACC.Identity.Application.Ports.Security;
+using ACC.BuildingBlocks.AspNetCore.Errors;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Hosting.Server;
@@ -51,9 +52,11 @@ public sealed class IdentityApiTestContext : IAsyncDisposable
             builder.Services.AddIdentityMemoryPersistence();
             builder.Services.AddSingleton<IIdentityEmailSender>(emailSender);
             builder.Services.AddSingleton<IAuthenticationTokenIssuer, TestAuthenticationTokenIssuer>();
+            builder.Services.AddExpectedExceptionHandling();
 
             var app = builder.Build();
 
+            app.UseExceptionHandler();
             app.MapIdentity();
 
             await app.StartAsync();

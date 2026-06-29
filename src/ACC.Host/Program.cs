@@ -15,7 +15,7 @@ builder.Services.AddSwaggerGen(options =>
 {
     options.SwaggerDoc("v1", new OpenApiInfo
     {
-        Title = "Accounting Engine API",
+        Title = "ACC.NET API",
         Version = "v1",
         Description = "The published interface of the accounting system."
     });

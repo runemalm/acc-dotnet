@@ -44,6 +44,7 @@ public sealed class AddAccountEndpointTests
             new AddAccountRequest(chartOfAccountsId, "1000", "Another asset account"));
 
         var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
         Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
         Assert.NotNull(problem);
         Assert.Contains("must be unique within the chart of accounts", problem.Detail);

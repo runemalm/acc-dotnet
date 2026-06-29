@@ -1,4 +1,5 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Application.Ports.ReadModels.User;
 using ACC.Identity.Application.Ports.Security;
 using ACC.Identity.Domain.Aggregates;
@@ -28,20 +29,22 @@ public sealed class AuthenticateUserHandler
     public AuthenticateUserResult Handle(AuthenticateUserCommand command, DateTimeOffset authenticatedAt)
     {
         ArgumentNullException.ThrowIfNull(command);
-
-        AuthenticationMustBeValid.Ensure(
-            !string.IsNullOrWhiteSpace(command.Email) &&
-            !string.IsNullOrWhiteSpace(command.Password));
+        ValidateCommand(command);
 
         var existingUser = userStore.FindByEmail(NormalizeEmail(command.Email));
 
-        AuthenticationMustBeValid.Ensure(existingUser is not null);
+        if (existingUser is null)
+        {
+            throw new AuthenticationFailedException("Authentication must be valid.");
+        }
 
-        var user = users.Load(UserStream(existingUser!.UserId));
+        var user = users.Load(UserStream(existingUser.UserId));
 
         UserMustBeActiveToAuthenticate.Ensure(user);
-        AuthenticationMustBeValid.Ensure(
-            passwordHasher.Verify(command.Password, user.PasswordHash));
+        if (!passwordHasher.Verify(command.Password, user.PasswordHash))
+        {
+            throw new AuthenticationFailedException("Authentication must be valid.");
+        }
 
         var token = tokenIssuer.Issue(user.Id, user.Email, authenticatedAt);
 
@@ -52,6 +55,16 @@ public sealed class AuthenticateUserHandler
 
     private static StreamId UserStream(Guid userId) =>
         StreamId.For("user", userId);
+
+    private static void ValidateCommand(AuthenticateUserCommand command)
+    {
+        if (string.IsNullOrWhiteSpace(command.Email) ||
+            string.IsNullOrWhiteSpace(command.Password))
+        {
+            throw new ApplicationValidationException(
+                "Authentication must identify an email address and password.");
+        }
+    }
 
     private static string NormalizeEmail(string email) =>
         email.Trim().ToUpperInvariant();

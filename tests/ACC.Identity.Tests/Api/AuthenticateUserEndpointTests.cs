@@ -11,6 +11,22 @@ namespace ACC.Identity.Tests.Api;
 public sealed class AuthenticateUserEndpointTests
 {
     [Fact]
+    public async Task AuthenticateUser_WithMissingCredentials_ReturnsUnprocessableEntity()
+    {
+        await using var context = await IdentityApiTestContext.Create();
+
+        var response = await context.Client.PostAsJsonAsync(
+            "/identity/authenticate",
+            new AuthenticateUserCommand(string.Empty, string.Empty));
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal((int)HttpStatusCode.UnprocessableEntity, problem.Status);
+    }
+
+    [Fact]
     public async Task AuthenticateUser_WithValidCredentials_ReturnsOk()
     {
         await using var context = await IdentityApiTestContext.Create();

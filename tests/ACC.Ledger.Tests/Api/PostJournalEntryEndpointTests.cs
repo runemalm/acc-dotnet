@@ -90,6 +90,22 @@ public sealed class PostJournalEntryEndpointTests
         Assert.Contains("Account Cash must be recognized", problem.Detail);
     }
 
+    [Fact]
+    public async Task PostJournalEntry_WithoutLines_ReturnsUnprocessableEntity()
+    {
+        await using var context = await LedgerApiTestContext.Create();
+
+        var response = await context.Client.PostAsJsonAsync(
+            "/ledger/journal-entries",
+            new PostJournalEntryRequest(
+                Guid.NewGuid(),
+                new DateOnly(2026, 6, 10),
+                "Entry without lines",
+                null!));
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+    }
+
     private static PostJournalEntryRequest BalancedJournalEntry(
         Guid accountingSubjectId,
         DateOnly accountingDate) =>

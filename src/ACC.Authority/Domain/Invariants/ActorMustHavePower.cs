@@ -1,5 +1,5 @@
 using ACC.Authority.Domain.Powers;
-using ACC.BuildingBlocks.Authorization;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Authority.Domain.Invariants;
 
@@ -13,8 +13,17 @@ public static class ActorMustHavePower
     {
         if (!hasPower)
         {
-            throw new AuthorizationDeniedException(
-                $"User {actorUserId} must have {power} power for accounting subject {accountingSubjectId}.");
+            throw new ActorMustHavePowerViolation(
+                actorUserId,
+                accountingSubjectId,
+                power);
         }
     }
 }
+
+public sealed class ActorMustHavePowerViolation(
+    Guid actorUserId,
+    Guid accountingSubjectId,
+    Power power)
+    : InvariantViolationException(
+        $"User {actorUserId} must have {power} power for accounting subject {accountingSubjectId}.");

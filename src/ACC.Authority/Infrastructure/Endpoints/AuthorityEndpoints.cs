@@ -2,8 +2,8 @@ using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Application.UseCases.RevokeRole;
 using ACC.Authority.Application.UseCases.ViewUserRoles;
 using ACC.Authority.Domain.Aggregates;
-using ACC.BuildingBlocks.Authorization;
-using ACC.BuildingBlocks.Failures;
+using ACC.Authority.Domain.Invariants;
+using ACC.BuildingBlocks.Domain;
 using ACC.BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -20,7 +20,7 @@ internal static class AuthorityEndpoints
             HttpContext context,
             AssignRoleHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var command = new AssignRoleCommand(
                     context.User.GetRequiredUserId(),
@@ -30,23 +30,7 @@ internal static class AuthorityEndpoints
                 var result = handler.Handle(command, DateTimeOffset.UtcNow);
 
                 return Results.Created($"/authority/role-assignments/{result.RoleAssignmentId}", result);
-            }
-            catch (AuthorizationDeniedException exception)
-            {
-                return Forbidden(exception);
-            }
-            catch (ResourceNotFoundException exception)
-            {
-                return Problem(exception, StatusCodes.Status404NotFound);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("AssignRole")
         .WithTags("Authority")
@@ -64,7 +48,7 @@ internal static class AuthorityEndpoints
             HttpContext context,
             RevokeRoleHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var command = new RevokeRoleCommand(
                     context.User.GetRequiredUserId(),
@@ -72,23 +56,7 @@ internal static class AuthorityEndpoints
                 var result = handler.Handle(command, DateTimeOffset.UtcNow);
 
                 return Results.Ok(result);
-            }
-            catch (AuthorizationDeniedException exception)
-            {
-                return Forbidden(exception);
-            }
-            catch (ResourceNotFoundException exception)
-            {
-                return Problem(exception, StatusCodes.Status404NotFound);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("RevokeRole")
         .WithTags("Authority")
@@ -119,15 +87,35 @@ internal static class AuthorityEndpoints
         return endpoints;
     }
 
+    private static IResult Execute(Func<IResult> action)
+    {
+        try
+        {
+            return action();
+        }
+        catch (InvariantViolationException exception)
+        {
+            return InvariantProblem(exception);
+        }
+    }
+
+    private static IResult InvariantProblem(InvariantViolationException exception) =>
+        Problem(exception, exception switch
+        {
+            UserMustBeRecognizedForAuthorityViolation => StatusCodes.Status404NotFound,
+            AccountingSubjectMustBeRecognizedForAuthorityViolation => StatusCodes.Status404NotFound,
+            ActorMustHavePowerViolation => StatusCodes.Status403Forbidden,
+            ActiveRoleAssignmentMustBeUniqueViolation => StatusCodes.Status409Conflict,
+            RoleAssignmentMustBeActiveToRevokeViolation => StatusCodes.Status409Conflict,
+            _ => throw new InvalidOperationException(
+                $"Invariant violation {exception.GetType().Name} has no Authority HTTP mapping.",
+                exception)
+        });
+
     private static IResult Problem(Exception exception, int statusCode) =>
         Results.Problem(
             detail: exception.Message,
             statusCode: statusCode);
-
-    private static IResult Forbidden(AuthorizationDeniedException exception) =>
-        Results.Problem(
-            detail: exception.Message,
-            statusCode: StatusCodes.Status403Forbidden);
 }
 
 public sealed record AssignRoleRequest(

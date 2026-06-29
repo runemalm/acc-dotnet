@@ -17,15 +17,17 @@ public sealed class CompleteOnboardingTests
         context.RecognizeUser(userId);
         context.AddTemplate(templateId, "BAS 2018 för K1");
 
-        var result = context.CompleteOnboarding.Handle(new CompleteOnboardingCommand(
-            userId,
-            "Example Business",
-            "198001011234",
-            AccountingSubjectType.EnskildFirma,
-            Country.Sweden,
-            AccountingMethod.Cash,
-            VatReportingPeriod.Quarterly,
-            templateId));
+        var result = context.CompleteOnboarding.Handle(
+            new CompleteOnboardingCommand(
+                userId,
+                "Example Business",
+                "198001011234",
+                AccountingSubjectType.EnskildFirma,
+                Country.Sweden,
+                AccountingMethod.Cash,
+                VatReportingPeriod.Quarterly,
+                templateId),
+            DateTimeOffset.UtcNow);
 
         var accountingSubject = context.FindAccountingSubject(result.AccountingSubjectId);
         var owner = Assert.Single(context.FindActiveRoles(userId));

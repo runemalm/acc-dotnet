@@ -1,5 +1,5 @@
-using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Application.UseCases.AddAccount;
+using ACC.ChartOfAccounts.Domain.Invariants;
 using ACC.ChartOfAccounts.Tests.TestKit;
 using Xunit;
 
@@ -38,7 +38,7 @@ public sealed class AddAccountTests
         var actorUserId = Guid.NewGuid();
         var chartOfAccountsId = context.AdoptChart(accountingSubjectId, actorUserId);
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<AccountNumberMustBeUniqueWithinChartOfAccountsViolation>(() =>
             context.AddAccount.Handle(
                 new AddAccountCommand(
                     actorUserId,

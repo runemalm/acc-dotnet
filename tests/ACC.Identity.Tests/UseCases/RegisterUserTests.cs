@@ -1,5 +1,5 @@
-using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Application.UseCases.RegisterUser;
+using ACC.Identity.Domain.Invariants;
 using ACC.Identity.Tests.TestKit;
 using Xunit;
 
@@ -42,7 +42,7 @@ public sealed class RegisterUserTests
             new RegisterUserCommand("user@example.com", "correct horse battery staple"),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<UserEmailMustBeUniqueViolation>(() =>
             context.RegisterUser.Handle(
                 new RegisterUserCommand("USER@example.com", "another password"),
                 DateTimeOffset.UtcNow));
@@ -55,7 +55,7 @@ public sealed class RegisterUserTests
     {
         var context = new IdentityUseCaseTestContext();
 
-        var exception = Assert.Throws<SemanticViolationException>(() =>
+        var exception = Assert.Throws<UserEmailMustBeValidViolation>(() =>
             context.RegisterUser.Handle(
                 new RegisterUserCommand("not-an-email-address", "correct horse battery staple"),
                 DateTimeOffset.UtcNow));

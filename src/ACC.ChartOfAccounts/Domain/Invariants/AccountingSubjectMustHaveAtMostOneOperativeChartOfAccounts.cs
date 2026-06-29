@@ -1,4 +1,4 @@
-using ACC.BuildingBlocks.Failures;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.ChartOfAccounts.Domain.Invariants;
 
@@ -8,8 +8,13 @@ public static class AccountingSubjectMustHaveAtMostOneOperativeChartOfAccounts
     {
         if (!hasNoOperativeChart)
         {
-            throw new StateConflictException(
-                $"Accounting subject {accountingSubjectId} already has an operative chart of accounts.");
+            throw new AccountingSubjectMustHaveAtMostOneOperativeChartOfAccountsViolation(
+                accountingSubjectId);
         }
     }
 }
+
+public sealed class AccountingSubjectMustHaveAtMostOneOperativeChartOfAccountsViolation(
+    Guid accountingSubjectId)
+    : InvariantViolationException(
+        $"Accounting subject {accountingSubjectId} already has an operative chart of accounts.");

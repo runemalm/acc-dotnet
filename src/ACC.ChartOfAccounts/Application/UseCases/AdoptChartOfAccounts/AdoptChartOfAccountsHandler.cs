@@ -42,12 +42,11 @@ public sealed class AdoptChartOfAccountsHandler
         DateTimeOffset adoptedAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
 
-        if (!recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId))
-        {
-            throw new ResourceNotFoundException(
-                $"Accounting subject {command.AccountingSubjectId} must be recognized before adopting a chart of accounts.");
-        }
+        AccountingSubjectMustBeRecognizedForChartOfAccounts.Ensure(
+            recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId),
+            command.AccountingSubjectId);
 
         AccountingSubjectMustHaveAtMostOneOperativeChartOfAccounts.Ensure(
             chartStore.FindFor(command.AccountingSubjectId) is null,
@@ -59,7 +58,7 @@ public sealed class AdoptChartOfAccountsHandler
             "adopt a chart of accounts");
 
         var template = templates.Find(command.TemplateId)
-            ?? throw new ResourceNotFoundException(
+            ?? throw new RequiredObjectNotFoundException(
                 $"Chart of accounts template {command.TemplateId} is not recognized.");
 
         var chartOfAccountsId = Guid.NewGuid();
@@ -86,4 +85,19 @@ public sealed class AdoptChartOfAccountsHandler
 
     private static StreamId ChartStream(Guid chartOfAccountsId) =>
         StreamId.For("chart-of-accounts", chartOfAccountsId);
+
+    private static void ValidateCommand(AdoptChartOfAccountsCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty || command.AccountingSubjectId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Adopting a chart of accounts must identify the acting user and accounting subject.");
+        }
+
+        if (string.IsNullOrWhiteSpace(command.TemplateId))
+        {
+            throw new ApplicationValidationException(
+                "A chart of accounts template must be identified.");
+        }
+    }
 }

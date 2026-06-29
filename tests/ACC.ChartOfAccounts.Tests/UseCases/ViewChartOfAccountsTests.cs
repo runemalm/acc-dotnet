@@ -1,5 +1,5 @@
 using ACC.ChartOfAccounts.Application.UseCases.ViewChartOfAccounts;
-using ACC.BuildingBlocks.Authorization;
+using ACC.ChartOfAccounts.Domain.Invariants;
 using ACC.ChartOfAccounts.Tests.TestKit;
 using Xunit;
 
@@ -35,7 +35,7 @@ public sealed class ViewChartOfAccountsTests
         var accountingSubjectId = Guid.NewGuid();
         context.AdoptChart(accountingSubjectId, adoptingActorUserId);
 
-        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+        var exception = Assert.Throws<ActorMustHaveChartOfAccountsPowerViolation>(() =>
             context.ViewChartOfAccounts.Handle(
                 new ViewChartOfAccountsQuery(viewingActorUserId, accountingSubjectId)));
 

@@ -1,8 +1,7 @@
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
-using ACC.BuildingBlocks.Authorization;
-using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Domain.Aggregates;
+using ACC.Ledger.Domain.Invariants;
 using ACC.Ledger.Tests.TestKit;
 using Xunit;
 
@@ -55,7 +54,7 @@ public sealed class CloseFiscalPeriodTests
             new CloseFiscalPeriodCommand(actorUserId, opened.FiscalPeriodId),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<FiscalPeriodMustBeOpenToCloseViolation>(() =>
             context.CloseFiscalPeriod.Handle(
                 new CloseFiscalPeriodCommand(actorUserId, opened.FiscalPeriodId),
                 DateTimeOffset.UtcNow));
@@ -78,7 +77,7 @@ public sealed class CloseFiscalPeriodTests
                 new DateOnly(2026, 12, 31)),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+        var exception = Assert.Throws<ActorMustHaveLedgerPowerViolation>(() =>
             context.CloseFiscalPeriod.Handle(
                 new CloseFiscalPeriodCommand(actorUserId, opened.FiscalPeriodId),
                 DateTimeOffset.UtcNow));

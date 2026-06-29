@@ -1,4 +1,4 @@
-using ACC.BuildingBlocks.Failures;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Authority.Domain.Invariants;
 
@@ -8,8 +8,11 @@ public static class AccountingSubjectMustBeRecognizedForAuthority
     {
         if (!isRecognized)
         {
-            throw new ResourceNotFoundException(
-                $"Accounting subject {accountingSubjectId} must be recognized before authority can be assigned.");
+            throw new AccountingSubjectMustBeRecognizedForAuthorityViolation(accountingSubjectId);
         }
     }
 }
+
+public sealed class AccountingSubjectMustBeRecognizedForAuthorityViolation(Guid accountingSubjectId)
+    : InvariantViolationException(
+        $"Accounting subject {accountingSubjectId} must be recognized before authority can be assigned.");

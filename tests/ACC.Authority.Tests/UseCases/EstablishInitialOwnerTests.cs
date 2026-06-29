@@ -1,8 +1,8 @@
 using ACC.Authority.Application.UseCases.EstablishInitialOwner;
 using ACC.Authority.Domain.Aggregates;
+using ACC.Authority.Domain.Invariants;
 using ACC.Authority.Domain.Powers;
 using ACC.Authority.Tests.TestKit;
-using ACC.BuildingBlocks.Failures;
 using Xunit;
 
 namespace ACC.Authority.Tests.UseCases;
@@ -47,7 +47,7 @@ public sealed class EstablishInitialOwnerTests
             new EstablishInitialOwnerCommand(userId, accountingSubjectId),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<ActiveRoleAssignmentMustBeUniqueViolation>(() =>
             context.EstablishInitialOwner.Handle(
                 new EstablishInitialOwnerCommand(userId, accountingSubjectId),
                 DateTimeOffset.UtcNow));

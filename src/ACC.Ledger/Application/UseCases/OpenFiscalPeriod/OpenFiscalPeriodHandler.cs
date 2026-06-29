@@ -1,4 +1,5 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Application.Ports.Authority;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Domain.Events;
@@ -26,6 +27,7 @@ public sealed class OpenFiscalPeriodHandler
     public OpenFiscalPeriodResult Handle(OpenFiscalPeriodCommand command, DateTimeOffset occurredAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
 
         ActorMustHaveLedgerPower.Ensure(
             authority.CanOpenFiscalPeriod(command.ActorUserId, command.AccountingSubjectId),
@@ -50,6 +52,21 @@ public sealed class OpenFiscalPeriodHandler
         fiscalPeriodProjection.Project(domainEvent);
 
         return new OpenFiscalPeriodResult(fiscalPeriod.Id);
+    }
+
+    private static void ValidateCommand(OpenFiscalPeriodCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty || command.AccountingSubjectId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Opening a fiscal period must identify the acting user and accounting subject.");
+        }
+
+        if (command.EndsOn < command.StartsOn)
+        {
+            throw new ApplicationValidationException(
+                "A fiscal period cannot end before it starts.");
+        }
     }
 
     private static StreamId FiscalPeriodStream(Guid fiscalPeriodId) =>

@@ -2,7 +2,8 @@ using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
 using ACC.Ledger.Application.UseCases.ViewJournalEntry;
-using ACC.BuildingBlocks.Authorization;
+using ACC.Ledger.Domain.Invariants;
+using ACC.BuildingBlocks.Domain;
 using ACC.BuildingBlocks.Failures;
 using ACC.BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
@@ -20,7 +21,7 @@ internal static class LedgerEndpoints
             HttpContext context,
             OpenFiscalPeriodHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var command = new OpenFiscalPeriodCommand(
                     context.User.GetRequiredUserId(),
@@ -30,23 +31,7 @@ internal static class LedgerEndpoints
                 var result = handler.Handle(command, DateTimeOffset.UtcNow);
 
                 return Results.Created($"/ledger/fiscal-periods/{result.FiscalPeriodId}", result);
-            }
-            catch (AuthorizationDeniedException exception)
-            {
-                return Forbidden(exception);
-            }
-            catch (ResourceNotFoundException exception)
-            {
-                return Problem(exception, StatusCodes.Status404NotFound);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("OpenFiscalPeriod")
         .WithTags("Ledger")
@@ -64,7 +49,7 @@ internal static class LedgerEndpoints
             HttpContext context,
             CloseFiscalPeriodHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var result = handler.Handle(
                     new CloseFiscalPeriodCommand(
@@ -73,23 +58,7 @@ internal static class LedgerEndpoints
                     DateTimeOffset.UtcNow);
 
                 return Results.Ok(result);
-            }
-            catch (AuthorizationDeniedException exception)
-            {
-                return Forbidden(exception);
-            }
-            catch (ResourceNotFoundException exception)
-            {
-                return Problem(exception, StatusCodes.Status404NotFound);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("CloseFiscalPeriod")
         .WithTags("Ledger")
@@ -106,8 +75,14 @@ internal static class LedgerEndpoints
             HttpContext context,
             PostJournalEntryHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
+                if (request.Lines is null || request.Lines.Any(line => line is null))
+                {
+                    throw new ApplicationValidationException(
+                        "A journal entry must have at least one line.");
+                }
+
                 var command = new PostJournalEntryCommand(
                     context.User.GetRequiredUserId(),
                     request.AccountingSubjectId,
@@ -122,23 +97,7 @@ internal static class LedgerEndpoints
                 var result = handler.Handle(command, DateTimeOffset.UtcNow);
 
                 return Results.Created($"/ledger/journal-entries/{result.JournalEntryId}", result);
-            }
-            catch (AuthorizationDeniedException exception)
-            {
-                return Forbidden(exception);
-            }
-            catch (ResourceNotFoundException exception)
-            {
-                return Problem(exception, StatusCodes.Status404NotFound);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("PostJournalEntry")
         .WithTags("Ledger")
@@ -156,7 +115,7 @@ internal static class LedgerEndpoints
             HttpContext context,
             ViewJournalEntryHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var journalEntry = handler.Handle(new ViewJournalEntryQuery(
                     context.User.GetRequiredUserId(),
@@ -165,23 +124,7 @@ internal static class LedgerEndpoints
                 return journalEntry is null
                     ? Results.NotFound()
                     : Results.Ok(journalEntry);
-            }
-            catch (AuthorizationDeniedException exception)
-            {
-                return Forbidden(exception);
-            }
-            catch (ResourceNotFoundException exception)
-            {
-                return Problem(exception, StatusCodes.Status404NotFound);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("ViewJournalEntry")
         .WithTags("Ledger")
@@ -196,15 +139,37 @@ internal static class LedgerEndpoints
         return endpoints;
     }
 
+    private static IResult Execute(Func<IResult> act)
+    {
+        try
+        {
+            return act();
+        }
+        catch (InvariantViolationException exception)
+        {
+            return InvariantProblem(exception);
+        }
+    }
+
+    private static IResult InvariantProblem(InvariantViolationException exception) =>
+        Problem(exception, exception switch
+        {
+            JournalEntryMustBalanceViolation => StatusCodes.Status422UnprocessableEntity,
+            PostingAccountMustBeRecognizedViolation => StatusCodes.Status422UnprocessableEntity,
+            ActorMustHaveLedgerPowerViolation => StatusCodes.Status403Forbidden,
+            PostingMustOccurInOpenPeriodViolation => StatusCodes.Status409Conflict,
+            PostingAccountMustBeActiveViolation => StatusCodes.Status409Conflict,
+            FiscalPeriodMustBeOpenToCloseViolation => StatusCodes.Status409Conflict,
+            _ => throw new InvalidOperationException(
+                $"Invariant violation {exception.GetType().Name} has no Ledger HTTP mapping.",
+                exception)
+        });
+
     private static IResult Problem(Exception exception, int statusCode) =>
         Results.Problem(
             detail: exception.Message,
             statusCode: statusCode);
 
-    private static IResult Forbidden(AuthorizationDeniedException exception) =>
-        Results.Problem(
-            detail: exception.Message,
-            statusCode: StatusCodes.Status403Forbidden);
 }
 
 public sealed record OpenFiscalPeriodRequest(

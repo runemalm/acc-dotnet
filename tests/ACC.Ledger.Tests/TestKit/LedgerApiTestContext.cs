@@ -2,6 +2,7 @@ using ACC.ChartOfAccounts.Application.Ports.ReadModels.ChartOfAccounts;
 using ACC.ChartOfAccounts.Infrastructure.ReadModels.ChartOfAccounts;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Application.Ports.Authority;
+using ACC.BuildingBlocks.AspNetCore.Errors;
 using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -45,9 +46,11 @@ public sealed class LedgerApiTestContext : IAsyncDisposable
         builder.Services.RemoveAll<ILedgerAuthorityPort>();
         builder.Services.AddSingleton<ILedgerAuthorityPort>(authority);
         builder.Services.AddTestAuthentication();
+        builder.Services.AddExpectedExceptionHandling();
 
         var app = builder.Build();
 
+        app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapLedger();

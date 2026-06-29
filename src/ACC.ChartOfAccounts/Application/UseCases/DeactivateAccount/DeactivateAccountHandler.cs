@@ -26,6 +26,7 @@ public sealed class DeactivateAccountHandler
     public DeactivateAccountResult Handle(DeactivateAccountCommand command, DateTimeOffset deactivatedAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
         var chart = LoadChart(command.ChartOfAccountsId);
 
         ActorMustHaveChartOfAccountsPower.Ensure(
@@ -45,8 +46,23 @@ public sealed class DeactivateAccountHandler
 
     private Domain.Aggregates.ChartOfAccounts LoadChart(Guid chartOfAccountsId)
         => charts.Find(ChartStream(chartOfAccountsId))
-           ?? throw new ResourceNotFoundException(
+           ?? throw new RequiredObjectNotFoundException(
                $"Chart of accounts {chartOfAccountsId} could not be found.");
+
+    private static void ValidateCommand(DeactivateAccountCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty || command.ChartOfAccountsId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Deactivating an account must identify the acting user and chart of accounts.");
+        }
+
+        if (string.IsNullOrWhiteSpace(command.AccountNumber))
+        {
+            throw new ApplicationValidationException(
+                "An account must have a number.");
+        }
+    }
 
     private static StreamId ChartStream(Guid chartOfAccountsId) =>
         StreamId.For("chart-of-accounts", chartOfAccountsId);

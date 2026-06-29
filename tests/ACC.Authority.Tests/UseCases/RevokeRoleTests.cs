@@ -1,6 +1,6 @@
 using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Application.UseCases.RevokeRole;
-using ACC.BuildingBlocks.Authorization;
+using ACC.Authority.Domain.Invariants;
 using ACC.BuildingBlocks.Failures;
 using ACC.Authority.Domain.Aggregates;
 using ACC.Authority.Tests.TestKit;
@@ -10,6 +10,34 @@ namespace ACC.Authority.Tests.UseCases;
 
 public sealed class RevokeRoleTests
 {
+    [Fact]
+    public void GivenIncompleteRevocation_WhenRevokingRole_ThenApplicationValidationFails()
+    {
+        var context = new AuthorityUseCaseTestContext();
+
+        var exception = Assert.Throws<ApplicationValidationException>(() =>
+            context.RevokeRole.Handle(
+                new RevokeRoleCommand(Guid.Empty, Guid.NewGuid()),
+                DateTimeOffset.UtcNow));
+
+        Assert.Contains("must identify", exception.Message);
+    }
+
+    [Fact]
+    public void GivenMissingRoleAssignment_WhenRevokingRole_ThenRequiredObjectNotFound()
+    {
+        var context = new AuthorityUseCaseTestContext();
+        var actorUserId = Guid.NewGuid();
+        context.RecognizeUser(actorUserId);
+
+        var exception = Assert.Throws<RequiredObjectNotFoundException>(() =>
+            context.RevokeRole.Handle(
+                new RevokeRoleCommand(actorUserId, Guid.NewGuid()),
+                DateTimeOffset.UtcNow));
+
+        Assert.Contains("must exist", exception.Message);
+    }
+
     [Fact]
     public void GivenActiveRoleAssignment_WhenRevokingRole_ThenRoleRevoked()
     {
@@ -38,7 +66,7 @@ public sealed class RevokeRoleTests
             new RevokeRoleCommand(assigned.ActorUserId, assigned.RoleAssignmentId),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<RoleAssignmentMustBeActiveToRevokeViolation>(() =>
             context.RevokeRole.Handle(
                 new RevokeRoleCommand(assigned.ActorUserId, assigned.RoleAssignmentId),
                 DateTimeOffset.UtcNow));
@@ -54,7 +82,7 @@ public sealed class RevokeRoleTests
         var actorUserId = Guid.NewGuid();
         context.RecognizeUser(actorUserId);
 
-        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+        var exception = Assert.Throws<ActorMustHavePowerViolation>(() =>
             context.RevokeRole.Handle(
                 new RevokeRoleCommand(actorUserId, assigned.RoleAssignmentId),
                 DateTimeOffset.UtcNow));

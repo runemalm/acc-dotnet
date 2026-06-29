@@ -1,6 +1,5 @@
 using ACC.ChartOfAccounts.Application.UseCases.AdoptChartOfAccounts;
-using ACC.BuildingBlocks.Authorization;
-using ACC.BuildingBlocks.Failures;
+using ACC.ChartOfAccounts.Domain.Invariants;
 using ACC.ChartOfAccounts.Tests.TestKit;
 using Xunit;
 
@@ -8,6 +7,25 @@ namespace ACC.ChartOfAccounts.Tests.UseCases;
 
 public sealed class AdoptChartOfAccountsTests
 {
+    [Fact]
+    public void GivenUnrecognizedAccountingSubject_WhenAdoptingChart_ThenAccountingSubjectMustBeRecognizedViolation()
+    {
+        var context = new ChartOfAccountsUseCaseTestContext();
+        var accountingSubjectId = Guid.NewGuid();
+        var actorUserId = Guid.NewGuid();
+        var template = context.AddTemplate();
+
+        var exception = Assert.Throws<AccountingSubjectMustBeRecognizedForChartOfAccountsViolation>(() =>
+            context.AdoptChartOfAccounts.Handle(
+                new AdoptChartOfAccountsCommand(
+                    actorUserId,
+                    accountingSubjectId,
+                    template.Id),
+                DateTimeOffset.UtcNow));
+
+        Assert.Contains("must be recognized before adopting", exception.Message);
+    }
+
     [Fact]
     public void GivenRecognizedSubjectAndTemplate_WhenAdoptingChart_ThenChartOfAccountsAdopted()
     {
@@ -44,7 +62,7 @@ public sealed class AdoptChartOfAccountsTests
         context.AdoptChart(accountingSubjectId, actorUserId);
         context.AddTemplate("another-template", "Another chart");
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<AccountingSubjectMustHaveAtMostOneOperativeChartOfAccountsViolation>(() =>
             context.AdoptChartOfAccounts.Handle(
                 new AdoptChartOfAccountsCommand(
                     actorUserId,
@@ -64,7 +82,7 @@ public sealed class AdoptChartOfAccountsTests
         var template = context.AddTemplate();
         context.RecognizeAccountingSubject(accountingSubjectId);
 
-        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+        var exception = Assert.Throws<ActorMustHaveChartOfAccountsPowerViolation>(() =>
             context.AdoptChartOfAccounts.Handle(
                 new AdoptChartOfAccountsCommand(
                     actorUserId,

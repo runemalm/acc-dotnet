@@ -27,13 +27,14 @@ public sealed class CloseFiscalPeriodHandler
     public CloseFiscalPeriodResult Handle(CloseFiscalPeriodCommand command, DateTimeOffset occurredAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
 
         var streamId = FiscalPeriodStream(command.FiscalPeriodId);
         var fiscalPeriod = fiscalPeriods.Load(streamId);
 
         if (fiscalPeriod.Id == Guid.Empty)
         {
-            throw new ResourceNotFoundException(
+            throw new RequiredObjectNotFoundException(
                 $"Fiscal period {command.FiscalPeriodId} could not be found.");
         }
 
@@ -57,4 +58,13 @@ public sealed class CloseFiscalPeriodHandler
 
     private static StreamId FiscalPeriodStream(Guid fiscalPeriodId) =>
         StreamId.For("fiscal-period", fiscalPeriodId);
+
+    private static void ValidateCommand(CloseFiscalPeriodCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty || command.FiscalPeriodId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Closing a fiscal period must identify the acting user and fiscal period.");
+        }
+    }
 }

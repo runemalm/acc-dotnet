@@ -4,8 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace ACC.Host.Errors;
 
-public sealed class UnhandledExceptionHandler(
-    ILogger<UnhandledExceptionHandler> logger,
+public sealed class UnexpectedExceptionHandler(
+    ILogger<UnexpectedExceptionHandler> logger,
     IHostEnvironment environment,
     IProblemDetailsService problemDetailsService) : IExceptionHandler
 {
@@ -18,7 +18,7 @@ public sealed class UnhandledExceptionHandler(
 
         logger.LogError(
             exception,
-            "An unhandled exception occurred while processing {Method} {Path}. Trace ID: {TraceId}",
+            "An unexpected exception occurred while processing {Method} {Path}. Trace ID: {TraceId}",
             httpContext.Request.Method,
             httpContext.Request.Path,
             traceId);

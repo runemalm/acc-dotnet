@@ -32,6 +32,7 @@ public sealed class RevokeRoleHandler
     public RevokeRoleResult Handle(RevokeRoleCommand command, DateTimeOffset revokedAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
 
         UserMustBeRecognizedForAuthority.Ensure(
             recognizedUsers.IsRecognizedUser(command.ActorUserId),
@@ -39,7 +40,8 @@ public sealed class RevokeRoleHandler
         var roleAssignment = roleAssignments.Load(RoleAssignmentStream(command.RoleAssignmentId));
         if (roleAssignment.Id == Guid.Empty)
         {
-            throw new ResourceNotFoundException("A role assignment must exist before it can be revoked.");
+            throw new RequiredObjectNotFoundException(
+                "A role assignment must exist before it can be revoked.");
         }
 
         ActorMustHavePower.Ensure(
@@ -67,4 +69,13 @@ public sealed class RevokeRoleHandler
 
     private static StreamId RoleAssignmentStream(Guid roleAssignmentId) =>
         StreamId.For("role-assignment", roleAssignmentId);
+
+    private static void ValidateCommand(RevokeRoleCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty || command.RoleAssignmentId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Revoking a role must identify the acting user and role assignment.");
+        }
+    }
 }

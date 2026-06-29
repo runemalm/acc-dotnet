@@ -13,6 +13,22 @@ namespace ACC.Application.Tests.Api;
 public sealed class CompleteOnboardingEndpointTests
 {
     [Fact]
+    public async Task CompleteOnboarding_WithIncompleteRequest_ReturnsUnprocessableEntity()
+    {
+        await using var context = await ApplicationApiTestContext.Create();
+
+        var response = await context.Client.PostAsJsonAsync(
+            "/onboarding/complete",
+            Request(string.Empty));
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal((int)HttpStatusCode.UnprocessableEntity, problem.Status);
+    }
+
+    [Fact]
     public async Task CompleteOnboarding_WithExistingUserAndTemplate_ReturnsCreated()
     {
         await using var context = await ApplicationApiTestContext.Create();

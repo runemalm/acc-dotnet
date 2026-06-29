@@ -1,4 +1,4 @@
-using ACC.BuildingBlocks.Authorization;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.ChartOfAccounts.Domain.Invariants;
 
@@ -8,8 +8,11 @@ public static class ActorMustHaveChartOfAccountsPower
     {
         if (!hasPower)
         {
-            throw new AuthorizationDeniedException(
-                $"User {actorUserId} must have power to {act}.");
+            throw new ActorMustHaveChartOfAccountsPowerViolation(actorUserId, act);
         }
     }
 }
+
+public sealed class ActorMustHaveChartOfAccountsPowerViolation(Guid actorUserId, string act)
+    : InvariantViolationException(
+        $"User {actorUserId} must have power to {act}.");

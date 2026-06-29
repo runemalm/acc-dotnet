@@ -29,7 +29,7 @@ public sealed class AuthenticateUserTests
     }
 
     [Fact]
-    public void GivenUnknownEmail_WhenAuthenticating_ThenAuthenticationMustBeValidViolation()
+    public void GivenUnknownEmail_WhenAuthenticating_ThenAuthenticationFails()
     {
         var context = new IdentityUseCaseTestContext();
 
@@ -42,7 +42,7 @@ public sealed class AuthenticateUserTests
     }
 
     [Fact]
-    public void GivenIncorrectPassword_WhenAuthenticating_ThenAuthenticationMustBeValidViolation()
+    public void GivenIncorrectPassword_WhenAuthenticating_ThenAuthenticationFails()
     {
         var context = new IdentityUseCaseTestContext();
 

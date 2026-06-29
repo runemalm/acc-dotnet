@@ -1,4 +1,4 @@
-using ACC.BuildingBlocks.Failures;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Ledger.Domain.Invariants;
 
@@ -10,8 +10,11 @@ public static class PostingAccountMustBeActive
     {
         if (!isActive)
         {
-            throw new StateConflictException(
-                $"Account {accountNumber} must be active in the accounting subject's operative chart before it can receive postings.");
+            throw new PostingAccountMustBeActiveViolation(accountNumber);
         }
     }
 }
+
+public sealed class PostingAccountMustBeActiveViolation(string accountNumber)
+    : InvariantViolationException(
+        $"Account {accountNumber} must be active in the accounting subject's operative chart before it can receive postings.");

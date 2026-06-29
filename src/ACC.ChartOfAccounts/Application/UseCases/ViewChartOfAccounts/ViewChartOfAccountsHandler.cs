@@ -1,6 +1,7 @@
 using ACC.ChartOfAccounts.Application.Ports.Authority;
 using ACC.ChartOfAccounts.Application.Ports.ReadModels.ChartOfAccounts;
 using ACC.ChartOfAccounts.Domain.Invariants;
+using ACC.BuildingBlocks.Failures;
 
 namespace ACC.ChartOfAccounts.Application.UseCases.ViewChartOfAccounts;
 
@@ -23,6 +24,7 @@ public sealed class ViewChartOfAccountsHandler
     public ViewChartOfAccountsResponse? Handle(ViewChartOfAccountsQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
+        ValidateQuery(query);
         var chart = charts.FindFor(query.AccountingSubjectId);
 
         if (chart is null)
@@ -48,5 +50,14 @@ public sealed class ViewChartOfAccountsHandler
                     account.Name,
                     account.IsActive))
                 .ToArray());
+    }
+
+    private static void ValidateQuery(ViewChartOfAccountsQuery query)
+    {
+        if (query.ActorUserId == Guid.Empty || query.AccountingSubjectId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Viewing a chart of accounts must identify the acting user and accounting subject.");
+        }
     }
 }

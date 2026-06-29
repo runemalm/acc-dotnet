@@ -29,7 +29,8 @@ public sealed class RoleAssignment : EventSourcedAggregate
     {
         if (Id == Guid.Empty)
         {
-            throw new ResourceNotFoundException("A role assignment must exist before it can be revoked.");
+            throw new InvalidOperationException(
+                "A role assignment must exist before it can be revoked.");
         }
 
         if (revokedByUserId == Guid.Empty)
@@ -123,7 +124,9 @@ public sealed class RoleAssignment : EventSourcedAggregate
 
         if (userId == Guid.Empty)
         {
-            throw new ArgumentException("A role assignment must identify the user receiving authority.", nameof(userId));
+            throw new ArgumentException(
+                "A role assignment must identify the user receiving authority.",
+                nameof(userId));
         }
 
         if (accountingSubjectId == Guid.Empty)

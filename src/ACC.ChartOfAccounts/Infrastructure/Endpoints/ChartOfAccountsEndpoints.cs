@@ -4,8 +4,8 @@ using ACC.ChartOfAccounts.Application.UseCases.DeactivateAccount;
 using ACC.ChartOfAccounts.Application.UseCases.ReactivateAccount;
 using ACC.ChartOfAccounts.Application.UseCases.ViewChartOfAccounts;
 using ACC.ChartOfAccounts.Application.UseCases.ViewChartOfAccountsTemplates;
-using ACC.BuildingBlocks.Authorization;
-using ACC.BuildingBlocks.Failures;
+using ACC.ChartOfAccounts.Domain.Invariants;
+using ACC.BuildingBlocks.Domain;
 using ACC.BuildingBlocks.Security;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
@@ -20,36 +20,18 @@ internal static class ChartOfAccountsEndpoints
         endpoints.MapPost("/adopt", (
             AdoptChartOfAccountsRequest request,
             HttpContext context,
-            AdoptChartOfAccountsHandler handler) =>
+            AdoptChartOfAccountsHandler handler) => Execute(() =>
         {
-            try
-            {
-                var command = new AdoptChartOfAccountsCommand(
-                    context.User.GetRequiredUserId(),
-                    request.AccountingSubjectId,
-                    request.TemplateId);
-                var result = handler.Handle(command, DateTimeOffset.UtcNow);
-                return Results.Created(
-                    $"/chart-of-accounts/accounting-subjects/{command.AccountingSubjectId}",
-                    result);
-            }
-            catch (AuthorizationDeniedException exception)
-            {
-                return Forbidden(exception);
-            }
-            catch (ResourceNotFoundException exception)
-            {
-                return Problem(exception, StatusCodes.Status404NotFound);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
-        })
+            var command = new AdoptChartOfAccountsCommand(
+                context.User.GetRequiredUserId(),
+                request.AccountingSubjectId,
+                request.TemplateId);
+            var result = handler.Handle(command, DateTimeOffset.UtcNow);
+
+            return Results.Created(
+                $"/chart-of-accounts/accounting-subjects/{command.AccountingSubjectId}",
+                result);
+        }))
         .WithName("AdoptChartOfAccounts")
         .WithTags("Chart of Accounts")
         .WithSummary("Adopt a chart of accounts")
@@ -137,33 +119,14 @@ internal static class ChartOfAccountsEndpoints
         endpoints.MapGet("/accounting-subjects/{accountingSubjectId:guid}", (
             Guid accountingSubjectId,
             HttpContext context,
-            ViewChartOfAccountsHandler handler) =>
+            ViewChartOfAccountsHandler handler) => Execute(() =>
         {
-            try
-            {
-                var result = handler.Handle(new ViewChartOfAccountsQuery(
-                    context.User.GetRequiredUserId(),
-                    accountingSubjectId));
+            var result = handler.Handle(new ViewChartOfAccountsQuery(
+                context.User.GetRequiredUserId(),
+                accountingSubjectId));
 
-                return result is null ? Results.NotFound() : Results.Ok(result);
-            }
-            catch (AuthorizationDeniedException exception)
-            {
-                return Forbidden(exception);
-            }
-            catch (ResourceNotFoundException exception)
-            {
-                return Problem(exception, StatusCodes.Status404NotFound);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
-        })
+            return result is null ? Results.NotFound() : Results.Ok(result);
+        }))
         .WithName("ViewChartOfAccounts")
         .WithTags("Chart of Accounts")
         .WithSummary("View a chart of accounts")
@@ -182,33 +145,36 @@ internal static class ChartOfAccountsEndpoints
         {
             return act();
         }
-        catch (AuthorizationDeniedException exception)
+        catch (InvariantViolationException exception)
         {
-            return Forbidden(exception);
-        }
-        catch (ResourceNotFoundException exception)
-        {
-            return Problem(exception, StatusCodes.Status404NotFound);
-        }
-        catch (StateConflictException exception)
-        {
-            return Problem(exception, StatusCodes.Status409Conflict);
-        }
-        catch (Exception exception) when (exception is SemanticViolationException or ArgumentException)
-        {
-            return Problem(exception, StatusCodes.Status422UnprocessableEntity);
+            return InvariantProblem(exception);
         }
     }
+
+    private static IResult InvariantProblem(InvariantViolationException exception) =>
+        Problem(exception, exception switch
+        {
+            AccountingSubjectMustBeRecognizedForChartOfAccountsViolation =>
+                StatusCodes.Status404NotFound,
+            AccountMustBeRecognizedByChartOfAccountsViolation =>
+                StatusCodes.Status404NotFound,
+            ActorMustHaveChartOfAccountsPowerViolation => StatusCodes.Status403Forbidden,
+            AccountingSubjectMustHaveAtMostOneOperativeChartOfAccountsViolation =>
+                StatusCodes.Status409Conflict,
+            AccountNumberMustBeUniqueWithinChartOfAccountsViolation =>
+                StatusCodes.Status409Conflict,
+            AccountMustBeActiveToDeactivateViolation => StatusCodes.Status409Conflict,
+            AccountMustBeInactiveToReactivateViolation => StatusCodes.Status409Conflict,
+            _ => throw new InvalidOperationException(
+                $"Invariant violation {exception.GetType().Name} has no Chart of Accounts HTTP mapping.",
+                exception)
+        });
 
     private static IResult Problem(Exception exception, int statusCode) =>
         Results.Problem(
             detail: exception.Message,
             statusCode: statusCode);
 
-    private static IResult Forbidden(AuthorizationDeniedException exception) =>
-        Results.Problem(
-            detail: exception.Message,
-            statusCode: StatusCodes.Status403Forbidden);
 }
 
 public sealed record AdoptChartOfAccountsRequest(

@@ -3,6 +3,7 @@ using ACC.ChartOfAccounts.Application.Ports.Authority;
 using ACC.ChartOfAccounts.Application.Ports.Templates;
 using ACC.ChartOfAccounts.Application.UseCases.AdoptChartOfAccounts;
 using ACC.ChartOfAccounts.Application.UseCases.DeactivateAccount;
+using ACC.BuildingBlocks.AspNetCore.Errors;
 using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -53,8 +54,10 @@ public sealed class ChartOfAccountsApiTestContext : IAsyncDisposable
         builder.Services.AddSingleton<IRecognizedAccountingSubjectPort>(recognizedAccountingSubjects);
         builder.Services.AddSingleton<IChartOfAccountsAuthorityPort>(authority);
         builder.Services.AddTestAuthentication();
+        builder.Services.AddExpectedExceptionHandling();
 
         var app = builder.Build();
+        app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapChartOfAccounts();

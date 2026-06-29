@@ -1,6 +1,7 @@
 using ACC.Ledger.Application.Ports.Authority;
 using ACC.Ledger.Application.Ports.ReadModels.JournalEntry;
 using ACC.Ledger.Domain.Invariants;
+using ACC.BuildingBlocks.Failures;
 
 namespace ACC.Ledger.Application.UseCases.ViewJournalEntry;
 
@@ -20,6 +21,7 @@ public sealed class ViewJournalEntryHandler
     public ViewJournalEntryResponse? Handle(ViewJournalEntryQuery query)
     {
         ArgumentNullException.ThrowIfNull(query);
+        ValidateQuery(query);
 
         var journalEntry = journalEntries.Find(query.JournalEntryId);
 
@@ -42,5 +44,14 @@ public sealed class ViewJournalEntryHandler
                 .Select(line => new ViewJournalEntryResponseLine(line.Account, line.Debit, line.Credit))
                 .ToArray(),
             journalEntry.PostedAt);
+    }
+
+    private static void ValidateQuery(ViewJournalEntryQuery query)
+    {
+        if (query.ActorUserId == Guid.Empty || query.JournalEntryId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Viewing a journal entry must identify the acting user and journal entry.");
+        }
     }
 }

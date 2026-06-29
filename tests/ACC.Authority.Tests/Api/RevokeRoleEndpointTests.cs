@@ -14,6 +14,25 @@ namespace ACC.Authority.Tests.Api;
 public sealed class RevokeRoleEndpointTests
 {
     [Fact]
+    public async Task RevokeRole_WithMissingRoleAssignment_ReturnsNotFound()
+    {
+        await using var context = await AuthorityApiTestContext.Create();
+        var actorUserId = Guid.NewGuid();
+        context.RecognizeUser(actorUserId);
+        context.Client.AuthenticateAs(actorUserId);
+
+        var response = await context.Client.PostAsJsonAsync(
+            "/authority/revoke-role",
+            new RevokeRoleRequest(Guid.NewGuid()));
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal((int)HttpStatusCode.NotFound, problem.Status);
+    }
+
+    [Fact]
     public async Task RevokeRole_WithActiveRoleAssignment_ReturnsOk()
     {
         await using var context = await AuthorityApiTestContext.Create();

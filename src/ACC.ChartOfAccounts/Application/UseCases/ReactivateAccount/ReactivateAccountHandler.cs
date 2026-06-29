@@ -26,6 +26,7 @@ public sealed class ReactivateAccountHandler
     public ReactivateAccountResult Handle(ReactivateAccountCommand command, DateTimeOffset reactivatedAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
         var chart = LoadChart(command.ChartOfAccountsId);
 
         ActorMustHaveChartOfAccountsPower.Ensure(
@@ -45,8 +46,23 @@ public sealed class ReactivateAccountHandler
 
     private Domain.Aggregates.ChartOfAccounts LoadChart(Guid chartOfAccountsId)
         => charts.Find(ChartStream(chartOfAccountsId))
-           ?? throw new ResourceNotFoundException(
+           ?? throw new RequiredObjectNotFoundException(
                $"Chart of accounts {chartOfAccountsId} could not be found.");
+
+    private static void ValidateCommand(ReactivateAccountCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty || command.ChartOfAccountsId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Reactivating an account must identify the acting user and chart of accounts.");
+        }
+
+        if (string.IsNullOrWhiteSpace(command.AccountNumber))
+        {
+            throw new ApplicationValidationException(
+                "An account must have a number.");
+        }
+    }
 
     private static StreamId ChartStream(Guid chartOfAccountsId) =>
         StreamId.For("chart-of-accounts", chartOfAccountsId);

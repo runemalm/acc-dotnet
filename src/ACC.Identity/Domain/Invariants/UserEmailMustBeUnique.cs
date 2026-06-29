@@ -1,4 +1,4 @@
-using ACC.BuildingBlocks.Failures;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Identity.Domain.Invariants;
 
@@ -8,8 +8,10 @@ public static class UserEmailMustBeUnique
     {
         if (!isAvailable)
         {
-            throw new StateConflictException(
-                $"A user with email address {email} already exists.");
+            throw new UserEmailMustBeUniqueViolation(email);
         }
     }
 }
+
+public sealed class UserEmailMustBeUniqueViolation(string email)
+    : InvariantViolationException($"A user with email address {email} already exists.");

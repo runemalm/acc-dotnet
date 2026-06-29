@@ -1,8 +1,7 @@
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
-using ACC.BuildingBlocks.Authorization;
-using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
+using ACC.Ledger.Domain.Invariants;
 using ACC.Ledger.Tests.TestKit;
 using Xunit;
 
@@ -52,10 +51,10 @@ public sealed class PostJournalEntryTests
             accountingSubjectId,
             new DateOnly(2026, 6, 10));
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<PostingMustOccurInOpenPeriodViolation>(() =>
             context.PostJournalEntry.Handle(command, DateTimeOffset.UtcNow));
 
-        Assert.Contains("No fiscal period contains accounting date", exception.Message);
+        Assert.Contains("no fiscal period contains that date", exception.Message);
     }
 
     [Fact]
@@ -86,7 +85,7 @@ public sealed class PostJournalEntryTests
                 new PostJournalEntryCommandLine("Owner Equity", 0m, 900m)
             ]);
 
-        var exception = Assert.Throws<SemanticViolationException>(() =>
+        var exception = Assert.Throws<JournalEntryMustBalanceViolation>(() =>
             context.PostJournalEntry.Handle(command, DateTimeOffset.UtcNow));
 
         Assert.Contains("Journal entry must balance.", exception.Message);
@@ -114,7 +113,7 @@ public sealed class PostJournalEntryTests
             DateTimeOffset.UtcNow);
         context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<PostingMustOccurInOpenPeriodViolation>(() =>
             context.PostJournalEntry.Handle(
                 BalancedJournalEntry(actorUserId, accountingSubjectId, accountingDate),
                 DateTimeOffset.UtcNow));
@@ -139,7 +138,7 @@ public sealed class PostJournalEntryTests
             DateTimeOffset.UtcNow);
         context.MakeAccountsActive(accountingSubjectId, "Owner Equity");
 
-        var exception = Assert.Throws<SemanticViolationException>(() =>
+        var exception = Assert.Throws<PostingAccountMustBeRecognizedViolation>(() =>
             context.PostJournalEntry.Handle(
                 BalancedJournalEntry(actorUserId, accountingSubjectId, accountingDate),
                 DateTimeOffset.UtcNow));
@@ -165,7 +164,7 @@ public sealed class PostJournalEntryTests
         context.MakeAccountInactive(accountingSubjectId, "Cash");
         context.MakeAccountsActive(accountingSubjectId, "Owner Equity");
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<PostingAccountMustBeActiveViolation>(() =>
             context.PostJournalEntry.Handle(
                 BalancedJournalEntry(actorUserId, accountingSubjectId, accountingDate),
                 DateTimeOffset.UtcNow));
@@ -190,7 +189,7 @@ public sealed class PostJournalEntryTests
             DateTimeOffset.UtcNow);
         context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
-        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+        var exception = Assert.Throws<ActorMustHaveLedgerPowerViolation>(() =>
             context.PostJournalEntry.Handle(
                 BalancedJournalEntry(actorUserId, accountingSubjectId, accountingDate),
                 DateTimeOffset.UtcNow));

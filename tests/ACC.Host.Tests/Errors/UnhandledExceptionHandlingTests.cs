@@ -1,6 +1,8 @@
 using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
+using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.Host.Errors;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -34,6 +36,49 @@ public sealed class UnhandledExceptionHandlingTests
         Assert.Null(problem.Detail);
         Assert.True(problem.Extensions.ContainsKey("traceId"));
         Assert.False(problem.Extensions.ContainsKey("stackTrace"));
+    }
+
+    [Fact]
+    public async Task ArgumentException_InProduction_ReturnsInternalServerError()
+    {
+        await using var context = await ErrorTestContext.Create(Environments.Production);
+
+        var response = await context.Client.GetAsync("/throw-argument");
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.Equal(HttpStatusCode.InternalServerError, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal("An unexpected error occurred.", problem.Title);
+        Assert.Null(problem.Detail);
+    }
+
+    [Fact]
+    public async Task ApplicationValidationException_ReturnsUnprocessableEntity()
+    {
+        await using var context = await ErrorTestContext.Create(Environments.Production);
+
+        var response = await context.Client.GetAsync("/throw-application-validation");
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal(ExceptionMessage, problem.Detail);
+    }
+
+    [Fact]
+    public async Task WrongExpectedStreamVersionException_DoesNotExposeStreamDetails()
+    {
+        await using var context = await ErrorTestContext.Create(Environments.Production);
+
+        var response = await context.Client.GetAsync("/throw-stream-version");
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.Equal(HttpStatusCode.Conflict, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal(
+            "The operation conflicts with changes made since its state was read.",
+            problem.Detail);
+        Assert.DoesNotContain("sensitive-stream", problem.Detail);
     }
 
     [Fact]
@@ -90,6 +135,15 @@ public sealed class UnhandledExceptionHandlingTests
             app.UseExceptionHandler();
             app.MapGet("/throw", IResult () =>
                 throw new InvalidOperationException(ExceptionMessage));
+            app.MapGet("/throw-argument", IResult () =>
+                throw new ArgumentException(ExceptionMessage));
+            app.MapGet("/throw-application-validation", IResult () =>
+                throw new ApplicationValidationException(ExceptionMessage));
+            app.MapGet("/throw-stream-version", IResult () =>
+                throw new WrongExpectedStreamVersionException(
+                    StreamId.For("sensitive-stream", Guid.NewGuid()),
+                    expectedVersion: 1,
+                    actualVersion: 2));
 
             var client = await Start(app);
             return new ErrorTestContext(app, client);

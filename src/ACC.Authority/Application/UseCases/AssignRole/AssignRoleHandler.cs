@@ -8,6 +8,7 @@ using ACC.Authority.Domain.Invariants;
 using ACC.Authority.Domain.Powers;
 using ACC.Authority.Infrastructure.ReadModels.RoleAssignment;
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 
 namespace ACC.Authority.Application.UseCases.AssignRole;
 
@@ -39,6 +40,7 @@ public sealed class AssignRoleHandler
     public AssignRoleResult Handle(AssignRoleCommand command, DateTimeOffset assignedAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
 
         UserMustBeRecognizedForAuthority.Ensure(
             recognizedUsers.IsRecognizedUser(command.ActorUserId),
@@ -89,4 +91,16 @@ public sealed class AssignRoleHandler
 
     private static StreamId RoleAssignmentStream(Guid roleAssignmentId) =>
         StreamId.For("role-assignment", roleAssignmentId);
+
+    private static void ValidateCommand(AssignRoleCommand command)
+    {
+        if (command.UserId == Guid.Empty ||
+            command.ActorUserId == Guid.Empty ||
+            command.AccountingSubjectId == Guid.Empty ||
+            !Enum.IsDefined(command.Role))
+        {
+            throw new ApplicationValidationException(
+                "A role assignment must identify a user, accounting subject, and recognized role.");
+        }
+    }
 }

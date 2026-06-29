@@ -1,5 +1,5 @@
-using ACC.BuildingBlocks.Failures;
 using ACC.Authority.Domain.Aggregates;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Authority.Domain.Invariants;
 
@@ -13,8 +13,17 @@ public static class ActiveRoleAssignmentMustBeUnique
     {
         if (!isUnique)
         {
-            throw new StateConflictException(
-                $"User {userId} already has active role {role} for accounting subject {accountingSubjectId}.");
+            throw new ActiveRoleAssignmentMustBeUniqueViolation(
+                userId,
+                accountingSubjectId,
+                role);
         }
     }
 }
+
+public sealed class ActiveRoleAssignmentMustBeUniqueViolation(
+    Guid userId,
+    Guid accountingSubjectId,
+    Role role)
+    : InvariantViolationException(
+        $"User {userId} already has active role {role} for accounting subject {accountingSubjectId}.");

@@ -1,4 +1,5 @@
 using ACC.BuildingBlocks.EventSourcing;
+using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Application.Ports.Communication;
 using ACC.Identity.Application.Ports.ReadModels.User;
 using ACC.Identity.Application.Ports.Security;
@@ -40,9 +41,11 @@ public sealed class RegisterUserHandler
     public RegisterUserResult Handle(RegisterUserCommand command, DateTimeOffset registeredAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
 
         var email = command.Email;
         UserEmailMustBeValid.Ensure(email);
+
         var normalizedEmail = NormalizeEmail(email);
 
         UserEmailMustBeUnique.Ensure(
@@ -83,6 +86,15 @@ public sealed class RegisterUserHandler
 
     private static StreamId UserStream(Guid userId) =>
         StreamId.For("user", userId);
+
+    private static void ValidateCommand(RegisterUserCommand command)
+    {
+        if (string.IsNullOrWhiteSpace(command.Password))
+        {
+            throw new ApplicationValidationException(
+                "A user password must be provided.");
+        }
+    }
 
     private static string NormalizeEmail(string email) =>
         email.Trim().ToUpperInvariant();

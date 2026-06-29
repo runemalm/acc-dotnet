@@ -2,7 +2,8 @@ using ACC.Identity.Application.UseCases.AuthenticateUser;
 using ACC.Identity.Application.UseCases.RegisterUser;
 using ACC.Identity.Application.UseCases.ResendVerification;
 using ACC.Identity.Application.UseCases.VerifyEmail;
-using ACC.BuildingBlocks.Failures;
+using ACC.Identity.Domain.Invariants;
+using ACC.BuildingBlocks.Domain;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
@@ -17,24 +18,12 @@ internal static class IdentityEndpoints
             RegisterUserCommand command,
             RegisterUserHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var result = handler.Handle(command, DateTimeOffset.UtcNow);
 
                 return Results.Created($"/identity/users/{result.UserId}", result);
-            }
-            catch (StateConflictException exception)
-            {
-                return Problem(exception, StatusCodes.Status409Conflict);
-            }
-            catch (SemanticViolationException exception)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
-            catch (ArgumentException exception)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("RegisterUser")
         .WithTags("Identity")
@@ -49,20 +38,12 @@ internal static class IdentityEndpoints
             AuthenticateUserCommand command,
             AuthenticateUserHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var result = handler.Handle(command, DateTimeOffset.UtcNow);
 
                 return Results.Ok(result);
-            }
-            catch (AuthenticationFailedException exception)
-            {
-                return Problem(exception, StatusCodes.Status401Unauthorized);
-            }
-            catch (ArgumentException exception)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("AuthenticateUser")
         .WithTags("Identity")
@@ -77,20 +58,12 @@ internal static class IdentityEndpoints
             VerifyEmailCommand command,
             VerifyEmailHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var result = handler.Handle(command, DateTimeOffset.UtcNow);
 
                 return Results.Ok(result);
-            }
-            catch (SemanticViolationException exception)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
-            catch (ArgumentException exception)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("VerifyEmail")
         .WithTags("Identity")
@@ -104,20 +77,12 @@ internal static class IdentityEndpoints
             ResendVerificationCommand command,
             ResendVerificationHandler handler) =>
         {
-            try
+            return Execute(() =>
             {
                 var result = handler.Handle(command, DateTimeOffset.UtcNow);
 
                 return Results.Ok(result);
-            }
-            catch (SemanticViolationException exception)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
-            catch (ArgumentException exception)
-            {
-                return Problem(exception, StatusCodes.Status422UnprocessableEntity);
-            }
+            });
         })
         .WithName("ResendVerification")
         .WithTags("Identity")
@@ -129,6 +94,31 @@ internal static class IdentityEndpoints
 
         return endpoints;
     }
+
+    private static IResult Execute(Func<IResult> act)
+    {
+        try
+        {
+            return act();
+        }
+        catch (InvariantViolationException exception)
+        {
+            return InvariantProblem(exception);
+        }
+    }
+
+    private static IResult InvariantProblem(InvariantViolationException exception) =>
+        Problem(exception, exception switch
+        {
+            UserEmailMustBeValidViolation => StatusCodes.Status422UnprocessableEntity,
+            UserEmailMustBeUniqueViolation => StatusCodes.Status409Conflict,
+            EmailVerificationMustBeValidViolation => StatusCodes.Status422UnprocessableEntity,
+            EmailMustNotAlreadyBeVerifiedViolation => StatusCodes.Status409Conflict,
+            UserMustBeActiveToAuthenticateViolation => StatusCodes.Status401Unauthorized,
+            _ => throw new InvalidOperationException(
+                $"Invariant violation {exception.GetType().Name} has no Identity HTTP mapping.",
+                exception)
+        });
 
     private static IResult Problem(Exception exception, int statusCode) =>
         Results.Problem(

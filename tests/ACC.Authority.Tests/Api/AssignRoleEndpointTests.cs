@@ -13,6 +13,28 @@ namespace ACC.Authority.Tests.Api;
 public sealed class AssignRoleEndpointTests
 {
     [Fact]
+    public async Task AssignRole_WithIncompleteAssignment_ReturnsUnprocessableEntity()
+    {
+        await using var context = await AuthorityApiTestContext.Create();
+        var accountingSubjectId = Guid.NewGuid();
+        var actorUserId = context.EstablishOwner(accountingSubjectId);
+        context.Client.AuthenticateAs(actorUserId);
+
+        var response = await context.Client.PostAsJsonAsync(
+            "/authority/assign-role",
+            new AssignRoleRequest(
+                Guid.Empty,
+                accountingSubjectId,
+                Role.Owner));
+
+        var problem = await response.Content.ReadFromJsonAsync<ProblemDetails>();
+
+        Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);
+        Assert.NotNull(problem);
+        Assert.Equal((int)HttpStatusCode.UnprocessableEntity, problem.Status);
+    }
+
+    [Fact]
     public async Task AssignRole_WithAuthorizedActor_ReturnsCreated()
     {
         await using var context = await AuthorityApiTestContext.Create();

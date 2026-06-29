@@ -1,5 +1,6 @@
 using ACC.AccountingSubject.Application.UseCases.CreateAccountingSubject;
 using ACC.Authority.Application.UseCases.EstablishInitialOwner;
+using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Application.UseCases.AdoptChartOfAccounts;
 
 namespace ACC.Application.Application.UseCases.CompleteOnboarding;
@@ -20,10 +21,12 @@ public sealed class CompleteOnboardingHandler
         this.adoptChartOfAccounts = adoptChartOfAccounts;
     }
 
-    public CompleteOnboardingResult Handle(CompleteOnboardingCommand command)
+    public CompleteOnboardingResult Handle(
+        CompleteOnboardingCommand command,
+        DateTimeOffset occurredAt)
     {
         ArgumentNullException.ThrowIfNull(command);
-        var occurredAt = DateTimeOffset.UtcNow;
+        ValidateCommand(command);
 
         var accountingSubject = createAccountingSubject.Handle(new CreateAccountingSubjectCommand(
             command.AccountingSubjectName,
@@ -45,5 +48,31 @@ public sealed class CompleteOnboardingHandler
             occurredAt);
 
         return new CompleteOnboardingResult(accountingSubject.AccountingSubjectId);
+    }
+
+    private static void ValidateCommand(CompleteOnboardingCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Completing onboarding must identify the acting user.");
+        }
+
+        if (string.IsNullOrWhiteSpace(command.AccountingSubjectName) ||
+            string.IsNullOrWhiteSpace(command.OrganizationNumber) ||
+            string.IsNullOrWhiteSpace(command.ChartOfAccountsTemplateId))
+        {
+            throw new ApplicationValidationException(
+                "Completing onboarding must describe the accounting subject and selected chart of accounts template.");
+        }
+
+        if (!Enum.IsDefined(command.AccountingSubjectType) ||
+            !Enum.IsDefined(command.Country) ||
+            !Enum.IsDefined(command.AccountingMethod) ||
+            !Enum.IsDefined(command.VatReportingPeriod))
+        {
+            throw new ApplicationValidationException(
+                "Completing onboarding must use recognized accounting subject classifications.");
+        }
     }
 }

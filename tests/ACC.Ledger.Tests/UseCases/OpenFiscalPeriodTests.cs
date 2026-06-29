@@ -1,5 +1,5 @@
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
-using ACC.BuildingBlocks.Authorization;
+using ACC.Ledger.Domain.Invariants;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Tests.TestKit;
 using Xunit;
@@ -38,7 +38,7 @@ public sealed class OpenFiscalPeriodTests
         var actorUserId = Guid.NewGuid();
         var accountingSubjectId = Guid.NewGuid();
 
-        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+        var exception = Assert.Throws<ActorMustHaveLedgerPowerViolation>(() =>
             context.OpenFiscalPeriod.Handle(
                 new OpenFiscalPeriodCommand(
                     actorUserId,

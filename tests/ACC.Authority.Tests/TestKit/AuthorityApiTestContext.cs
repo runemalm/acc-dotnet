@@ -1,6 +1,7 @@
 using ACC.Authority.Application.Ports.AccountingSubject;
 using ACC.Authority.Application.Ports.Identity;
 using ACC.Authority.Application.UseCases.EstablishInitialOwner;
+using ACC.BuildingBlocks.AspNetCore.Errors;
 using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -45,9 +46,11 @@ public sealed class AuthorityApiTestContext : IAsyncDisposable
         builder.Services.AddSingleton<IRecognizedUserPort>(recognizedUsers);
         builder.Services.AddSingleton<IRecognizedAccountingSubjectPort>(recognizedAccountingSubjects);
         builder.Services.AddTestAuthentication();
+        builder.Services.AddExpectedExceptionHandling();
 
         var app = builder.Build();
 
+        app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapAuthority();

@@ -1,6 +1,6 @@
 using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Domain.Aggregates;
-using ACC.BuildingBlocks.Authorization;
+using ACC.Authority.Domain.Invariants;
 using ACC.BuildingBlocks.Failures;
 using ACC.Authority.Tests.TestKit;
 using Xunit;
@@ -9,6 +9,23 @@ namespace ACC.Authority.Tests.UseCases;
 
 public sealed class AssignRoleTests
 {
+    [Fact]
+    public void GivenIncompleteAssignment_WhenAssigningRole_ThenApplicationValidationFails()
+    {
+        var context = new AuthorityUseCaseTestContext();
+
+        var exception = Assert.Throws<ApplicationValidationException>(() =>
+            context.AssignRole.Handle(
+                new AssignRoleCommand(
+                    Guid.Empty,
+                    Guid.NewGuid(),
+                    Guid.NewGuid(),
+                    Role.Owner),
+                DateTimeOffset.UtcNow));
+
+        Assert.Contains("must identify", exception.Message);
+    }
+
     [Fact]
     public void GivenNoExistingRole_WhenAssigningRole_ThenRoleAssigned()
     {
@@ -55,7 +72,7 @@ public sealed class AssignRoleTests
                 Role.Owner),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<StateConflictException>(() =>
+        var exception = Assert.Throws<ActiveRoleAssignmentMustBeUniqueViolation>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,
@@ -75,7 +92,7 @@ public sealed class AssignRoleTests
         var accountingSubjectId = Guid.NewGuid();
         var actorUserId = context.EstablishOwner(accountingSubjectId);
 
-        var exception = Assert.Throws<ResourceNotFoundException>(() =>
+        var exception = Assert.Throws<UserMustBeRecognizedForAuthorityViolation>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,
@@ -97,7 +114,7 @@ public sealed class AssignRoleTests
         context.RecognizeUser(actorUserId);
         context.RecognizeUser(userId);
 
-        var exception = Assert.Throws<ResourceNotFoundException>(() =>
+        var exception = Assert.Throws<AccountingSubjectMustBeRecognizedForAuthorityViolation>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,
@@ -120,7 +137,7 @@ public sealed class AssignRoleTests
         context.RecognizeUser(userId);
         context.RecognizeAccountingSubject(accountingSubjectId);
 
-        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
+        var exception = Assert.Throws<ActorMustHavePowerViolation>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,

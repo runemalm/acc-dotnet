@@ -1,8 +1,6 @@
-using ACC.BuildingBlocks.Failures;
-
 namespace ACC.BuildingBlocks.EventSourcing;
 
-public sealed class WrongExpectedStreamVersionException : StateConflictException
+public sealed class WrongExpectedStreamVersionException : Exception
 {
     public WrongExpectedStreamVersionException(StreamId streamId, long expectedVersion, long actualVersion)
         : base($"Stream '{streamId}' was expected to be at version {expectedVersion}, but was at version {actualVersion}.")

@@ -38,11 +38,7 @@ public sealed class PostJournalEntryHandler
     public PostJournalEntryResult Handle(PostJournalEntryCommand command, DateTimeOffset occurredAt)
     {
         ArgumentNullException.ThrowIfNull(command);
-
-        if (command.Lines is null)
-        {
-            throw new ArgumentException("A journal entry must have at least one line.", nameof(command));
-        }
+        ValidateCommand(command);
 
         ActorMustHaveLedgerPower.Ensure(
             authority.CanPostJournalEntry(command.ActorUserId, command.AccountingSubjectId),
@@ -55,11 +51,21 @@ public sealed class PostJournalEntryHandler
 
         var fiscalPeriodView = fiscalPeriodStore.FindFor(
             command.AccountingSubjectId,
-            command.AccountingDate)
-            ?? throw new StateConflictException(
-                $"No fiscal period contains accounting date {command.AccountingDate}.");
+            command.AccountingDate);
 
-        var fiscalPeriod = fiscalPeriods.Load(FiscalPeriodStream(fiscalPeriodView.FiscalPeriodId));
+        var fiscalPeriod = fiscalPeriodView is null
+            ? null
+            : fiscalPeriods.Load(FiscalPeriodStream(fiscalPeriodView.FiscalPeriodId));
+
+        var journalEntryId = Guid.NewGuid();
+        var journalEntry = JournalEntry.Posted(
+            journalEntryId,
+            command.AccountingSubjectId,
+            command.AccountingDate,
+            command.Description,
+            lines,
+            fiscalPeriod,
+            occurredAt);
 
         foreach (var accountNumber in lines
                      .Select(line => line.Account)
@@ -75,17 +81,6 @@ public sealed class PostJournalEntryHandler
                 accountNumber,
                 availability == PostingAccountAvailability.Active);
         }
-
-        var journalEntryId = Guid.NewGuid();
-
-        var journalEntry = JournalEntry.Posted(
-            journalEntryId,
-            command.AccountingSubjectId,
-            command.AccountingDate,
-            command.Description,
-            lines,
-            fiscalPeriod,
-            occurredAt);
 
         var storedEvents = journalEntries.Save(JournalEntryStream(journalEntryId), journalEntry);
 
@@ -104,4 +99,52 @@ public sealed class PostJournalEntryHandler
 
     private static StreamId FiscalPeriodStream(Guid fiscalPeriodId) =>
         StreamId.For("fiscal-period", fiscalPeriodId);
+
+    private static void ValidateCommand(PostJournalEntryCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty || command.AccountingSubjectId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Posting a journal entry must identify the acting user and accounting subject.");
+        }
+
+        if (string.IsNullOrWhiteSpace(command.Description))
+        {
+            throw new ApplicationValidationException(
+                "A journal entry must have a description.");
+        }
+
+        if (command.Lines is null || command.Lines.Count == 0)
+        {
+            throw new ApplicationValidationException(
+                "A journal entry must have at least one line.");
+        }
+
+        foreach (var line in command.Lines)
+        {
+            if (line is null || string.IsNullOrWhiteSpace(line.Account))
+            {
+                throw new ApplicationValidationException(
+                    "A journal entry line must name an account.");
+            }
+
+            if (line.Debit < 0 || line.Credit < 0)
+            {
+                throw new ApplicationValidationException(
+                    "A journal entry line amount cannot be negative.");
+            }
+
+            if (line.Debit == 0 && line.Credit == 0)
+            {
+                throw new ApplicationValidationException(
+                    "A journal entry line must carry either a debit or a credit.");
+            }
+
+            if (line.Debit > 0 && line.Credit > 0)
+            {
+                throw new ApplicationValidationException(
+                    "A journal entry line cannot carry both a debit and a credit.");
+            }
+        }
+    }
 }

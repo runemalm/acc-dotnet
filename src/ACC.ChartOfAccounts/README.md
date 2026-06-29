@@ -50,9 +50,13 @@ flowchart LR
 
 | Invariant | Description |
 | --- | --- |
+| AccountingSubjectMustBeRecognizedForChartOfAccounts | Only a recognized accounting subject may adopt an operative chart of accounts. |
 | AccountingSubjectMustHaveAtMostOneOperativeChartOfAccounts | An accounting subject cannot use competing operative general-ledger charts at the same time. |
+| AccountMustBeRecognizedByChartOfAccounts | Only an account recognized by a chart may have its availability changed. |
 | AccountNumberMustBeUniqueWithinChartOfAccounts | An account number identifies no more than one classification within a chart, including inactive accounts. |
 | ActorMustHaveChartOfAccountsPower | Adoption, modification, and viewing are valid only when performed by an actor with the required institutional power. |
+| AccountMustBeActiveToDeactivate | Only an active account may be deactivated. |
+| AccountMustBeInactiveToReactivate | Only an inactive account may be reactivated. |
 
 ## Templates
 

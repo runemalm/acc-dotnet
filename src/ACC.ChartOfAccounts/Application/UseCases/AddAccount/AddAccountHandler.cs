@@ -26,6 +26,7 @@ public sealed class AddAccountHandler
     public AddAccountResult Handle(AddAccountCommand command, DateTimeOffset addedAt)
     {
         ArgumentNullException.ThrowIfNull(command);
+        ValidateCommand(command);
         var chart = LoadChart(command.ChartOfAccountsId);
 
         ActorMustHaveChartOfAccountsPower.Ensure(
@@ -45,8 +46,29 @@ public sealed class AddAccountHandler
 
     private Domain.Aggregates.ChartOfAccounts LoadChart(Guid chartOfAccountsId)
         => charts.Find(ChartStream(chartOfAccountsId))
-           ?? throw new ResourceNotFoundException(
+           ?? throw new RequiredObjectNotFoundException(
                $"Chart of accounts {chartOfAccountsId} could not be found.");
+
+    private static void ValidateCommand(AddAccountCommand command)
+    {
+        if (command.ActorUserId == Guid.Empty || command.ChartOfAccountsId == Guid.Empty)
+        {
+            throw new ApplicationValidationException(
+                "Adding an account must identify the acting user and chart of accounts.");
+        }
+
+        if (string.IsNullOrWhiteSpace(command.AccountNumber))
+        {
+            throw new ApplicationValidationException(
+                "An account must have a number.");
+        }
+
+        if (string.IsNullOrWhiteSpace(command.AccountName))
+        {
+            throw new ApplicationValidationException(
+                "An account must have a name.");
+        }
+    }
 
     private static StreamId ChartStream(Guid chartOfAccountsId) =>
         StreamId.For("chart-of-accounts", chartOfAccountsId);

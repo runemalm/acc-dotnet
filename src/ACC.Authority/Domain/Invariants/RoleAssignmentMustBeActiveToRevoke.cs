@@ -1,5 +1,5 @@
-using ACC.BuildingBlocks.Failures;
 using ACC.Authority.Domain.Aggregates;
+using ACC.BuildingBlocks.Domain;
 
 namespace ACC.Authority.Domain.Invariants;
 
@@ -11,7 +11,10 @@ public static class RoleAssignmentMustBeActiveToRevoke
 
         if (!roleAssignment.IsActive)
         {
-            throw new StateConflictException("A role assignment must be active before it can be revoked.");
+            throw new RoleAssignmentMustBeActiveToRevokeViolation();
         }
     }
 }
+
+public sealed class RoleAssignmentMustBeActiveToRevokeViolation()
+    : InvariantViolationException("A role assignment must be active before it can be revoked.");

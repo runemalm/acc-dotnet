@@ -4,6 +4,7 @@ using ACC.Authority;
 using ACC.Authority.Application.Ports.Identity;
 using ACC.ChartOfAccounts;
 using ACC.ChartOfAccounts.Application.Ports.Templates;
+using ACC.BuildingBlocks.AspNetCore.Errors;
 using ACC.Testing.Authentication;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -53,8 +54,10 @@ public sealed class ApplicationApiTestContext : IAsyncDisposable
         builder.Services.AddSingleton<IRecognizedUserPort>(recognizedUsers);
         builder.Services.AddSingleton<IChartOfAccountsTemplateCatalog>(templates);
         builder.Services.AddTestAuthentication();
+        builder.Services.AddExpectedExceptionHandling();
 
         var app = builder.Build();
+        app.UseExceptionHandler();
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapApplication();

@@ -3,6 +3,7 @@ using ACC.BuildingBlocks.Failures;
 using ACC.Identity.Application.Ports.ReadModels.User;
 using ACC.Identity.Domain.Aggregates;
 using ACC.Identity.Domain.Events;
+using ACC.Identity.Domain.Invariants;
 using ACC.Identity.Infrastructure.ReadModels.User;
 
 namespace ACC.Identity.Application.UseCases.VerifyEmail;
@@ -29,17 +30,13 @@ public sealed class VerifyEmailHandler
 
         if (string.IsNullOrWhiteSpace(command.Token))
         {
-            throw new SemanticViolationException("Email verification must be valid.");
+            EmailVerificationMustBeValid.EnsureRecognized(false);
         }
 
         var existingUser = userStore.FindByEmailVerificationToken(command.Token);
+        EmailVerificationMustBeValid.EnsureRecognized(existingUser is not null);
 
-        if (existingUser is null)
-        {
-            throw new SemanticViolationException("Email verification must be valid.");
-        }
-
-        var streamId = UserStream(existingUser.UserId);
+        var streamId = UserStream(existingUser!.UserId);
         var user = users.Load(streamId);
 
         user.VerifyEmail(command.Token, verifiedAt);

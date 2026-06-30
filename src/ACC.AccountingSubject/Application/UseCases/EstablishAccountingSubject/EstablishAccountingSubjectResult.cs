@@ -1,0 +1,3 @@
+namespace ACC.AccountingSubject.Application.UseCases.EstablishAccountingSubject;
+
+public sealed record EstablishAccountingSubjectResult(Guid AccountingSubjectId);

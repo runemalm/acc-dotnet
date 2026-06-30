@@ -2,5 +2,6 @@
   <ItemGroup>
     <FrameworkReference Include="Microsoft.AspNetCore.App" />
     <ProjectReference Include="../ACC.BuildingBlocks/ACC.BuildingBlocks.csproj" />
+    <ProjectReference Include="../ACC.Identity/ACC.Identity.csproj" />
   </ItemGroup>
 </Project>

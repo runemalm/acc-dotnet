@@ -1,5 +1,6 @@
 using ACC.Application.Application.UseCases.CompleteOnboarding;
 using ACC.AccountingSubject.Domain.Aggregates;
+using ACC.AccountingSubject.Domain.Invariants;
 using ACC.Authority.Domain.Invariants;
 using ACC.BuildingBlocks.Domain;
 using ACC.ChartOfAccounts.Domain.Invariants;
@@ -42,7 +43,7 @@ internal static class OnboardingEndpoints
         .WithTags("Onboarding")
         .WithSummary("Complete onboarding")
         .WithDescription(
-            "Creates an accounting subject, establishes its founding Owner, and adopts the selected chart-of-accounts template.")
+            "Establishes an accounting subject and its founding Owner, then adopts the selected chart-of-accounts template.")
         .Produces<CompleteOnboardingResult>(StatusCodes.Status201Created)
         .ProducesProblem(StatusCodes.Status400BadRequest)
         .ProducesProblem(StatusCodes.Status403Forbidden)
@@ -68,6 +69,8 @@ internal static class OnboardingEndpoints
     private static IResult InvariantProblem(InvariantViolationException exception) =>
         Problem(exception, exception switch
         {
+            AccountingSubjectOrganizationNumberMustBeUniqueViolation =>
+                StatusCodes.Status409Conflict,
             UserMustBeRecognizedForAuthorityViolation => StatusCodes.Status404NotFound,
             AccountingSubjectMustBeRecognizedForAuthorityViolation => StatusCodes.Status404NotFound,
             ActiveRoleAssignmentMustBeUniqueViolation => StatusCodes.Status409Conflict,

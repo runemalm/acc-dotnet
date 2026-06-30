@@ -4,7 +4,7 @@ The **Application** module coordinates workflows that do not naturally belong to
 
 It does not own core domain concepts. Instead, it composes bounded-context use cases into larger application workflows.
 
-The current application workflow lets an already registered **User** complete onboarding by creating an **Accounting Subject**, establishing the founding **Owner** role, and adopting a selected **Chart of Accounts** template.
+The current application workflow lets an already registered **User** complete onboarding by establishing an **Accounting Subject** and its founding **Owner** role, then adopting a selected **Chart of Accounts** template.
 
 ## Ontology Diagram
 
@@ -18,16 +18,16 @@ flowchart LR
     Owner["Owner"]
     ChartOfAccounts["ChartOfAccounts"]
 
-    CreateAccountingSubject["CreateAccountingSubject"]
+    EstablishAccountingSubject["EstablishAccountingSubject"]
     EstablishInitialOwner["EstablishInitialOwner"]
     AdoptChartOfAccounts["AdoptChartOfAccounts"]
 
     CompleteOnboarding -->|for existing| User
-    CompleteOnboarding -->|coordinates| CreateAccountingSubject
+    CompleteOnboarding -->|coordinates| EstablishAccountingSubject
     CompleteOnboarding -->|coordinates| EstablishInitialOwner
     CompleteOnboarding -->|coordinates| AdoptChartOfAccounts
 
-    CreateAccountingSubject -->|creates| AccountingSubject
+    EstablishAccountingSubject -->|establishes| AccountingSubject
     EstablishInitialOwner -->|establishes| Owner
     Owner -->|for| AccountingSubject
     Owner -->|to| User
@@ -43,7 +43,7 @@ No aggregates are owned by this module.
 
 | Use Case | Description |
 | --- | --- |
-| CompleteOnboarding | Completes onboarding by creating an accounting subject, establishing its founding Owner, and adopting the selected chart-of-accounts template. |
+| CompleteOnboarding | Completes onboarding by establishing an accounting subject and its founding Owner, then adopting the selected chart-of-accounts template. |
 
 ## Events
 

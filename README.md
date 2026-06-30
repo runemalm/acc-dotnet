@@ -33,6 +33,7 @@ flowchart TB
     Audit["Audit"]
 
     Identity -->|identifies users for| Authority
+    Identity -->|identifies establishing users for| AccountingSubject
     AccountingSubject -->|is recognized by| Authority
     AccountingSubject -->|defines accounting scope for| Ledger
     AccountingSubject -->|adopts| ChartOfAccounts
@@ -55,6 +56,7 @@ flowchart TB
 
 - [Identity](src/ACC.Identity/README.md)
 - [Authority](src/ACC.Authority/README.md)
+- [Accounting Subject](src/ACC.AccountingSubject/README.md)
 - [Chart of Accounts](src/ACC.ChartOfAccounts/README.md)
 - [Ledger](src/ACC.Ledger/README.md)
 
@@ -69,7 +71,7 @@ flowchart TB
 ## Roadmap
 
 - [x] User registration, email verification, and authentication
-- [x] Accounting-subject creation and onboarding
+- [x] Accounting-subject establishment and onboarding
 - [x] Ownership, role assignment, and authority
 - [x] Chart-of-accounts adoption and management
 - [x] Fiscal-period management

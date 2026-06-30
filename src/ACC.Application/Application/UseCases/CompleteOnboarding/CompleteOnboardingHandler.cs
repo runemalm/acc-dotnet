@@ -1,4 +1,4 @@
-using ACC.AccountingSubject.Application.UseCases.CreateAccountingSubject;
+using ACC.AccountingSubject.Application.UseCases.EstablishAccountingSubject;
 using ACC.Authority.Application.UseCases.EstablishInitialOwner;
 using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Application.UseCases.AdoptChartOfAccounts;
@@ -7,16 +7,16 @@ namespace ACC.Application.Application.UseCases.CompleteOnboarding;
 
 public sealed class CompleteOnboardingHandler
 {
-    private readonly CreateAccountingSubjectHandler createAccountingSubject;
+    private readonly EstablishAccountingSubjectHandler establishAccountingSubject;
     private readonly EstablishInitialOwnerHandler establishInitialOwner;
     private readonly AdoptChartOfAccountsHandler adoptChartOfAccounts;
 
     public CompleteOnboardingHandler(
-        CreateAccountingSubjectHandler createAccountingSubject,
+        EstablishAccountingSubjectHandler establishAccountingSubject,
         EstablishInitialOwnerHandler establishInitialOwner,
         AdoptChartOfAccountsHandler adoptChartOfAccounts)
     {
-        this.createAccountingSubject = createAccountingSubject;
+        this.establishAccountingSubject = establishAccountingSubject;
         this.establishInitialOwner = establishInitialOwner;
         this.adoptChartOfAccounts = adoptChartOfAccounts;
     }
@@ -28,13 +28,15 @@ public sealed class CompleteOnboardingHandler
         ArgumentNullException.ThrowIfNull(command);
         ValidateCommand(command);
 
-        var accountingSubject = createAccountingSubject.Handle(new CreateAccountingSubjectCommand(
+        var accountingSubject = establishAccountingSubject.Handle(new EstablishAccountingSubjectCommand(
+            command.ActorUserId,
             command.AccountingSubjectName,
             command.OrganizationNumber,
             command.AccountingSubjectType,
             command.Country,
             command.AccountingMethod,
-            command.VatReportingPeriod));
+            command.VatReportingPeriod),
+            occurredAt);
 
         establishInitialOwner.Handle(new EstablishInitialOwnerCommand(
                 command.ActorUserId,

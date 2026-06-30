@@ -70,6 +70,28 @@ public sealed class CompleteOnboardingEndpointTests
     }
 
     [Fact]
+    public async Task CompleteOnboarding_WithExistingOrganizationNumber_ReturnsConflict()
+    {
+        await using var context = await ApplicationApiTestContext.Create();
+        var userId = Guid.NewGuid();
+        const string templateId = "se:bas:k1:2018";
+        context.RecognizeUser(userId);
+        context.AddTemplate(templateId, "BAS 2018 för K1");
+        context.Client.AuthenticateAs(userId);
+        var request = Request(templateId);
+
+        var firstResponse = await context.Client.PostAsJsonAsync(
+            "/onboarding/complete",
+            request);
+        var secondResponse = await context.Client.PostAsJsonAsync(
+            "/onboarding/complete",
+            request);
+
+        Assert.Equal(HttpStatusCode.Created, firstResponse.StatusCode);
+        Assert.Equal(HttpStatusCode.Conflict, secondResponse.StatusCode);
+    }
+
+    [Fact]
     public async Task CompleteOnboarding_WithoutAuthentication_ReturnsUnauthorized()
     {
         await using var context = await ApplicationApiTestContext.Create();

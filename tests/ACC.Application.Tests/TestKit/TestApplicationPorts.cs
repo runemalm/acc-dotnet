@@ -1,9 +1,10 @@
 using ACC.Authority.Application.Ports.Identity;
 using ACC.ChartOfAccounts.Application.Ports.Templates;
+using AccountingSubjectRecognizedUserPort = ACC.AccountingSubject.Application.Ports.Identity.IRecognizedUserPort;
 
 namespace ACC.Application.Tests.TestKit;
 
-internal sealed class TestRecognizedUserPort : IRecognizedUserPort
+internal sealed class TestRecognizedUserPort : IRecognizedUserPort, AccountingSubjectRecognizedUserPort
 {
     private readonly HashSet<Guid> userIds = [];
 

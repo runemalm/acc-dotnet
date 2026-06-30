@@ -52,7 +52,7 @@ flowchart LR
 
 | Use Case | Description |
 | --- | --- |
-| EstablishInitialOwner | Establishes the founding Owner role for a newly created accounting subject. |
+| EstablishInitialOwner | Establishes the founding Owner role for a newly established accounting subject. |
 | AssignRole | Grants a role to a user for an accounting subject by an acting user. |
 | RevokeRole | Revokes a previously assigned role by an acting user. |
 | ViewUserRoles | Shows an authenticated user their own active role assignments across accounting subjects. |

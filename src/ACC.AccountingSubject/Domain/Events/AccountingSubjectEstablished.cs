@@ -1,8 +1,8 @@
 using ACC.AccountingSubject.Domain.Aggregates;
 
-namespace ACC.AccountingSubject.Application.Ports.ReadModels.AccountingSubject;
+namespace ACC.AccountingSubject.Domain.Events;
 
-public sealed record AccountingSubjectView(
+public sealed record AccountingSubjectEstablished(
     Guid AccountingSubjectId,
     Guid EstablishedByUserId,
     string Name,

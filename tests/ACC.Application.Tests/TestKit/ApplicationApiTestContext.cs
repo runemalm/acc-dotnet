@@ -12,6 +12,7 @@ using Microsoft.AspNetCore.Hosting.Server;
 using Microsoft.AspNetCore.Hosting.Server.Features;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using AccountingSubjectRecognizedUserPort = ACC.AccountingSubject.Application.Ports.Identity.IRecognizedUserPort;
 
 namespace ACC.Application.Tests.TestKit;
 
@@ -50,8 +51,10 @@ public sealed class ApplicationApiTestContext : IAsyncDisposable
         builder.Services.AddChartOfAccountsMemoryPersistence();
         builder.Services.AddApplication();
         builder.Services.RemoveAll<IRecognizedUserPort>();
+        builder.Services.RemoveAll<AccountingSubjectRecognizedUserPort>();
         builder.Services.RemoveAll<IChartOfAccountsTemplateCatalog>();
         builder.Services.AddSingleton<IRecognizedUserPort>(recognizedUsers);
+        builder.Services.AddSingleton<AccountingSubjectRecognizedUserPort>(recognizedUsers);
         builder.Services.AddSingleton<IChartOfAccountsTemplateCatalog>(templates);
         builder.Services.AddTestAuthentication();
         builder.Services.AddExpectedExceptionHandling();

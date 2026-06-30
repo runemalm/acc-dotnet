@@ -10,6 +10,10 @@ public sealed class InMemoryAccountingSubjectStore : IAccountingSubjectStore
     public AccountingSubjectView? Find(Guid accountingSubjectId) =>
         accountingSubjects.GetValueOrDefault(accountingSubjectId);
 
+    public AccountingSubjectView? FindByOrganizationNumber(string organizationNumber) =>
+        accountingSubjects.Values.FirstOrDefault(accountingSubject =>
+            accountingSubject.OrganizationNumber == organizationNumber);
+
     public void Save(AccountingSubjectView accountingSubject)
     {
         ArgumentNullException.ThrowIfNull(accountingSubject);

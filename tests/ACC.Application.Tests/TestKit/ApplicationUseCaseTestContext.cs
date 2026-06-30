@@ -1,5 +1,5 @@
 using ACC.AccountingSubject.Application.Ports.ReadModels.AccountingSubject;
-using ACC.AccountingSubject.Application.UseCases.CreateAccountingSubject;
+using ACC.AccountingSubject.Application.UseCases.EstablishAccountingSubject;
 using ACC.AccountingSubject.Infrastructure.ReadModels.AccountingSubject;
 using ACC.Application.Application.UseCases.CompleteOnboarding;
 using ACC.Authority.Application.Policies;
@@ -20,6 +20,7 @@ using AuthorityRecognizedAccountingSubjectAdapter =
 using ChartRecognizedAccountingSubjectAdapter =
     ACC.ChartOfAccounts.Infrastructure.Adapters.AccountingSubject.RecognizedAccountingSubjectAdapter;
 using ChartOfAccountsAggregate = ACC.ChartOfAccounts.Domain.Aggregates.ChartOfAccounts;
+using AccountingSubjectAggregate = ACC.AccountingSubject.Domain.Aggregates.AccountingSubject;
 
 namespace ACC.Application.Tests.TestKit;
 
@@ -35,6 +36,9 @@ internal sealed class ApplicationUseCaseTestContext
     public ApplicationUseCaseTestContext()
     {
         var eventStore = new InMemoryEventStore();
+        var accountingSubjectRepository = new EventSourcedRepository<AccountingSubjectAggregate>(
+            eventStore,
+            AccountingSubjectAggregate.Rehydrate);
         var roleAssignmentRepository = new EventSourcedRepository<RoleAssignment>(
             eventStore,
             RoleAssignment.Rehydrate);
@@ -59,7 +63,11 @@ internal sealed class ApplicationUseCaseTestContext
             new ChartOfAccountsProjection(charts, accounts));
 
         CompleteOnboarding = new CompleteOnboardingHandler(
-            new CreateAccountingSubjectHandler(accountingSubjects),
+            new EstablishAccountingSubjectHandler(
+                accountingSubjectRepository,
+                accountingSubjects,
+                new AccountingSubjectProjection(accountingSubjects),
+                recognizedUsers),
             establishInitialOwner,
             adoptChartOfAccounts);
     }

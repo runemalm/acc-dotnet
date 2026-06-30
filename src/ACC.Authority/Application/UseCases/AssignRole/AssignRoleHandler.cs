@@ -7,6 +7,7 @@ using ACC.Authority.Domain.Events;
 using ACC.Authority.Domain.Invariants;
 using ACC.Authority.Domain.Powers;
 using ACC.Authority.Infrastructure.ReadModels.RoleAssignment;
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.Failures;
 
@@ -42,23 +43,33 @@ public sealed class AssignRoleHandler
         ArgumentNullException.ThrowIfNull(command);
         ValidateCommand(command);
 
-        UserMustBeRecognizedForAuthority.Ensure(
-            recognizedUsers.IsRecognizedUser(command.ActorUserId),
-            command.ActorUserId);
-        UserMustBeRecognizedForAuthority.Ensure(
-            recognizedUsers.IsRecognizedUser(command.UserId),
-            command.UserId);
-        AccountingSubjectMustBeRecognizedForAuthority.Ensure(
-            recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId),
-            command.AccountingSubjectId);
-        ActorMustHavePower.Ensure(
-            authorityPolicy.HasPower(
+        if (!recognizedUsers.IsRecognizedUser(command.ActorUserId))
+        {
+            throw new RequiredObjectNotFoundException(
+                $"Acting user {command.ActorUserId} is required to assign a role.");
+        }
+
+        if (!recognizedUsers.IsRecognizedUser(command.UserId))
+        {
+            throw new RequiredObjectNotFoundException(
+                $"Receiving user {command.UserId} is required to assign a role.");
+        }
+
+        if (!recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId))
+        {
+            throw new RequiredObjectNotFoundException(
+                $"Accounting subject {command.AccountingSubjectId} is required to assign a role.");
+        }
+
+        if (!authorityPolicy.HasPower(
                 command.ActorUserId,
                 command.AccountingSubjectId,
-                Power.AssignRole),
-            command.ActorUserId,
-            command.AccountingSubjectId,
-            Power.AssignRole);
+                Power.AssignRole))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {command.ActorUserId} must have AssignRole power for accounting subject {command.AccountingSubjectId}.");
+        }
+
         ActiveRoleAssignmentMustBeUnique.Ensure(
             !roleAssignmentStore.ActiveAssignmentExists(
                 command.UserId,

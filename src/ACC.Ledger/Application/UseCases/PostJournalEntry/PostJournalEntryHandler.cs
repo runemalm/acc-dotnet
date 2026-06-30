@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Application.Ports.ChartOfAccounts;
@@ -40,10 +41,11 @@ public sealed class PostJournalEntryHandler
         ArgumentNullException.ThrowIfNull(command);
         ValidateCommand(command);
 
-        ActorMustHaveLedgerPower.Ensure(
-            authority.CanPostJournalEntry(command.ActorUserId, command.AccountingSubjectId),
-            command.ActorUserId,
-            "post a journal entry");
+        if (!authority.CanPostJournalEntry(command.ActorUserId, command.AccountingSubjectId))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {command.ActorUserId} must have power to post a journal entry.");
+        }
 
         var lines = command.Lines
                 .Select(line => new JournalEntryLine(line.Account, line.Debit, line.Credit))

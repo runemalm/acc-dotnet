@@ -1,9 +1,9 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Application.Ports.Authority;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Domain.Events;
-using ACC.Ledger.Domain.Invariants;
 using ACC.Ledger.Infrastructure.ReadModels.FiscalPeriod;
 
 namespace ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
@@ -38,10 +38,11 @@ public sealed class CloseFiscalPeriodHandler
                 $"Fiscal period {command.FiscalPeriodId} could not be found.");
         }
 
-        ActorMustHaveLedgerPower.Ensure(
-            authority.CanCloseFiscalPeriod(command.ActorUserId, fiscalPeriod.AccountingSubjectId),
-            command.ActorUserId,
-            "close a fiscal period");
+        if (!authority.CanCloseFiscalPeriod(command.ActorUserId, fiscalPeriod.AccountingSubjectId))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {command.ActorUserId} must have power to close a fiscal period.");
+        }
 
         fiscalPeriod.Close(occurredAt);
         var storedEvents = fiscalPeriods.Save(streamId, fiscalPeriod);

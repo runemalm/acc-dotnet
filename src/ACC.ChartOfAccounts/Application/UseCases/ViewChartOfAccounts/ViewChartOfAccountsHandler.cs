@@ -1,6 +1,6 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.ChartOfAccounts.Application.Ports.Authority;
 using ACC.ChartOfAccounts.Application.Ports.ReadModels.ChartOfAccounts;
-using ACC.ChartOfAccounts.Domain.Invariants;
 using ACC.BuildingBlocks.Failures;
 
 namespace ACC.ChartOfAccounts.Application.UseCases.ViewChartOfAccounts;
@@ -32,10 +32,11 @@ public sealed class ViewChartOfAccountsHandler
             return null;
         }
 
-        ActorMustHaveChartOfAccountsPower.Ensure(
-            authority.CanViewChartOfAccounts(query.ActorUserId, chart.AccountingSubjectId),
-            query.ActorUserId,
-            "view a chart of accounts");
+        if (!authority.CanViewChartOfAccounts(query.ActorUserId, chart.AccountingSubjectId))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {query.ActorUserId} must have power to view a chart of accounts.");
+        }
 
         return new ViewChartOfAccountsResponse(
             chart.ChartOfAccountsId,

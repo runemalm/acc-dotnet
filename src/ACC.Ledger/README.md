@@ -27,6 +27,7 @@ flowchart LR
     PostingAccountMustBeRecognized["PostingAccountMustBeRecognized"]
     PostingAccountMustBeActive["PostingAccountMustBeActive"]
     FiscalPeriodMustBeOpenToClose["FiscalPeriodMustBeOpenToClose"]
+    RequiredPower["Required Power"]
 
     PostJournalEntry -->|produces| JournalEntryPosted
     OpenFiscalPeriod -->|produces| FiscalPeriodOpened
@@ -44,10 +45,10 @@ flowchart LR
     PostingAccountMustBeRecognized -. constrains .-> PostJournalEntry
     PostingAccountMustBeActive -. constrains .-> PostJournalEntry
     FiscalPeriodMustBeOpenToClose -. constrains .-> CloseFiscalPeriod
-    ActorMustHaveLedgerPower -. constrains .-> OpenFiscalPeriod
-    ActorMustHaveLedgerPower -. constrains .-> CloseFiscalPeriod
-    ActorMustHaveLedgerPower -. constrains .-> PostJournalEntry
-    ActorMustHaveLedgerPower -. constrains .-> ViewJournalEntry
+    RequiredPower -. admits .-> OpenFiscalPeriod
+    RequiredPower -. admits .-> CloseFiscalPeriod
+    RequiredPower -. admits .-> PostJournalEntry
+    RequiredPower -. admits .-> ViewJournalEntry
 ```
 
 ## Aggregates
@@ -85,4 +86,3 @@ The Ledger protects accounting validity through domain invariants.
 | PostingAccountMustBeRecognized | Every posting account must be recognized by the accounting subject's operative chart. |
 | PostingAccountMustBeActive | Every posting account must be active when the journal entry is posted. |
 | FiscalPeriodMustBeOpenToClose | A fiscal period may only be closed if it is open.            |
-| ActorMustHaveLedgerPower | An acting user must hold the power required to open or close a fiscal period, post a journal entry, or view a journal entry. |

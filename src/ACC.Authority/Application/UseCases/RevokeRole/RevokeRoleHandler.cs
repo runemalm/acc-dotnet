@@ -5,6 +5,7 @@ using ACC.Authority.Domain.Events;
 using ACC.Authority.Domain.Invariants;
 using ACC.Authority.Domain.Powers;
 using ACC.Authority.Infrastructure.ReadModels.RoleAssignment;
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.Failures;
 
@@ -34,9 +35,12 @@ public sealed class RevokeRoleHandler
         ArgumentNullException.ThrowIfNull(command);
         ValidateCommand(command);
 
-        UserMustBeRecognizedForAuthority.Ensure(
-            recognizedUsers.IsRecognizedUser(command.ActorUserId),
-            command.ActorUserId);
+        if (!recognizedUsers.IsRecognizedUser(command.ActorUserId))
+        {
+            throw new RequiredObjectNotFoundException(
+                $"Acting user {command.ActorUserId} is required to revoke a role.");
+        }
+
         var roleAssignment = roleAssignments.Load(RoleAssignmentStream(command.RoleAssignmentId));
         if (roleAssignment.Id == Guid.Empty)
         {
@@ -44,14 +48,14 @@ public sealed class RevokeRoleHandler
                 "A role assignment must exist before it can be revoked.");
         }
 
-        ActorMustHavePower.Ensure(
-            authorityPolicy.HasPower(
+        if (!authorityPolicy.HasPower(
                 command.ActorUserId,
                 roleAssignment.AccountingSubjectId,
-                Power.RevokeRole),
-            command.ActorUserId,
-            roleAssignment.AccountingSubjectId,
-            Power.RevokeRole);
+                Power.RevokeRole))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {command.ActorUserId} must have RevokeRole power for accounting subject {roleAssignment.AccountingSubjectId}.");
+        }
 
         roleAssignment.Revoke(command.ActorUserId, revokedAt);
 

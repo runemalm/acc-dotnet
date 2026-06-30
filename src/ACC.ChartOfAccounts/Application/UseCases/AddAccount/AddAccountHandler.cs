@@ -1,8 +1,8 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Application.Ports.Authority;
 using ACC.ChartOfAccounts.Domain.Events;
-using ACC.ChartOfAccounts.Domain.Invariants;
 using ACC.ChartOfAccounts.Infrastructure.ReadModels.ChartOfAccounts;
 
 namespace ACC.ChartOfAccounts.Application.UseCases.AddAccount;
@@ -29,10 +29,11 @@ public sealed class AddAccountHandler
         ValidateCommand(command);
         var chart = LoadChart(command.ChartOfAccountsId);
 
-        ActorMustHaveChartOfAccountsPower.Ensure(
-            authority.CanManageChartOfAccounts(command.ActorUserId, chart.AccountingSubjectId),
-            command.ActorUserId,
-            "add an account");
+        if (!authority.CanManageChartOfAccounts(command.ActorUserId, chart.AccountingSubjectId))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {command.ActorUserId} must have power to add an account.");
+        }
 
         chart.AddAccount(command.AccountNumber, command.AccountName, command.ActorUserId, addedAt);
         var storedEvents = charts.Save(ChartStream(command.ChartOfAccountsId), chart);

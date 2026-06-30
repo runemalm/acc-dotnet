@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Application.Ports.AccountingSubject;
@@ -44,18 +45,21 @@ public sealed class AdoptChartOfAccountsHandler
         ArgumentNullException.ThrowIfNull(command);
         ValidateCommand(command);
 
-        AccountingSubjectMustBeRecognizedForChartOfAccounts.Ensure(
-            recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId),
-            command.AccountingSubjectId);
+        if (!recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId))
+        {
+            throw new RequiredObjectNotFoundException(
+                $"Accounting subject {command.AccountingSubjectId} is required to adopt a chart of accounts.");
+        }
 
         AccountingSubjectMustHaveAtMostOneOperativeChartOfAccounts.Ensure(
             chartStore.FindFor(command.AccountingSubjectId) is null,
             command.AccountingSubjectId);
 
-        ActorMustHaveChartOfAccountsPower.Ensure(
-            authority.CanAdoptChartOfAccounts(command.ActorUserId, command.AccountingSubjectId),
-            command.ActorUserId,
-            "adopt a chart of accounts");
+        if (!authority.CanAdoptChartOfAccounts(command.ActorUserId, command.AccountingSubjectId))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {command.ActorUserId} must have power to adopt a chart of accounts.");
+        }
 
         var template = templates.Find(command.TemplateId)
             ?? throw new RequiredObjectNotFoundException(

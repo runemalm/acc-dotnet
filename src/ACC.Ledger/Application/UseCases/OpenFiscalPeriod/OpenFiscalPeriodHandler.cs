@@ -1,9 +1,9 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.Failures;
 using ACC.Ledger.Application.Ports.Authority;
 using ACC.Ledger.Domain.Aggregates;
 using ACC.Ledger.Domain.Events;
-using ACC.Ledger.Domain.Invariants;
 using ACC.Ledger.Infrastructure.ReadModels.FiscalPeriod;
 
 namespace ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
@@ -29,10 +29,11 @@ public sealed class OpenFiscalPeriodHandler
         ArgumentNullException.ThrowIfNull(command);
         ValidateCommand(command);
 
-        ActorMustHaveLedgerPower.Ensure(
-            authority.CanOpenFiscalPeriod(command.ActorUserId, command.AccountingSubjectId),
-            command.ActorUserId,
-            "open a fiscal period");
+        if (!authority.CanOpenFiscalPeriod(command.ActorUserId, command.AccountingSubjectId))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {command.ActorUserId} must have power to open a fiscal period.");
+        }
 
         var fiscalPeriodId = Guid.NewGuid();
         var fiscalPeriod = FiscalPeriod.Open(

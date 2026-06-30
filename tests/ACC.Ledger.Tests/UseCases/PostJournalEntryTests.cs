@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
@@ -173,7 +174,7 @@ public sealed class PostJournalEntryTests
     }
 
     [Fact]
-    public void GivenActorWithoutPostJournalEntryPower_WhenPosting_ThenActorMustHavePowerViolation()
+    public void GivenActorWithoutPostJournalEntryPower_WhenPosting_ThenAuthorizationDenied()
     {
         var context = new LedgerUseCaseTestContext();
         var actorUserId = Guid.NewGuid();
@@ -189,7 +190,7 @@ public sealed class PostJournalEntryTests
             DateTimeOffset.UtcNow);
         context.MakeAccountsActive(accountingSubjectId, "Cash", "Owner Equity");
 
-        var exception = Assert.Throws<ActorMustHaveLedgerPowerViolation>(() =>
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
             context.PostJournalEntry.Handle(
                 BalancedJournalEntry(actorUserId, accountingSubjectId, accountingDate),
                 DateTimeOffset.UtcNow));

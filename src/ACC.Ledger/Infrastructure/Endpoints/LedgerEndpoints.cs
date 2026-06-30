@@ -156,7 +156,6 @@ internal static class LedgerEndpoints
         {
             JournalEntryMustBalanceViolation => StatusCodes.Status422UnprocessableEntity,
             PostingAccountMustBeRecognizedViolation => StatusCodes.Status422UnprocessableEntity,
-            ActorMustHaveLedgerPowerViolation => StatusCodes.Status403Forbidden,
             PostingMustOccurInOpenPeriodViolation => StatusCodes.Status409Conflict,
             PostingAccountMustBeActiveViolation => StatusCodes.Status409Conflict,
             FiscalPeriodMustBeOpenToCloseViolation => StatusCodes.Status409Conflict,

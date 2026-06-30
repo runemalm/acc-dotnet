@@ -1,6 +1,7 @@
 using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Application.UseCases.RevokeRole;
 using ACC.Authority.Domain.Invariants;
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.Failures;
 using ACC.Authority.Domain.Aggregates;
 using ACC.Authority.Tests.TestKit;
@@ -75,14 +76,14 @@ public sealed class RevokeRoleTests
     }
 
     [Fact]
-    public void GivenActorWithoutRevokeRolePower_WhenRevokingRole_ThenActorMustHavePowerViolation()
+    public void GivenActorWithoutRevokeRolePower_WhenRevokingRole_ThenAuthorizationDenied()
     {
         var context = new AuthorityUseCaseTestContext();
         var assigned = AssignOwnerRole(context);
         var actorUserId = Guid.NewGuid();
         context.RecognizeUser(actorUserId);
 
-        var exception = Assert.Throws<ActorMustHavePowerViolation>(() =>
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
             context.RevokeRole.Handle(
                 new RevokeRoleCommand(actorUserId, assigned.RoleAssignmentId),
                 DateTimeOffset.UtcNow));

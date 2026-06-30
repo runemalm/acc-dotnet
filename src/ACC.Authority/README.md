@@ -82,8 +82,5 @@ flowchart LR
 
 | Invariant | Description |
 | --- | --- |
-| UserMustBeRecognizedForAuthority | A user must be recognized before authority can be assigned or used to revoke authority. |
-| AccountingSubjectMustBeRecognizedForAuthority | An accounting subject must be recognized before authority can be assigned for it. |
-| ActorMustHavePower | An acting user must hold a role that grants the power required by the authority act. |
 | ActiveRoleAssignmentMustBeUnique | A user cannot hold the same active role more than once for the same accounting subject. |
 | RoleAssignmentMustBeActiveToRevoke | A role assignment must still be active before it can be revoked. |

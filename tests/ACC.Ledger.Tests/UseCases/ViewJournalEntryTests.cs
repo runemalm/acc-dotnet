@@ -1,5 +1,5 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
-using ACC.Ledger.Domain.Invariants;
 using ACC.Ledger.Application.UseCases.PostJournalEntry;
 using ACC.Ledger.Application.UseCases.ViewJournalEntry;
 using ACC.Ledger.Tests.TestKit;
@@ -26,7 +26,7 @@ public sealed class ViewJournalEntryTests
     }
 
     [Fact]
-    public void GivenActorWithoutViewJournalEntryPower_WhenViewing_ThenActorMustHavePowerViolation()
+    public void GivenActorWithoutViewJournalEntryPower_WhenViewing_ThenAuthorizationDenied()
     {
         var context = new LedgerUseCaseTestContext();
         var postingActorUserId = Guid.NewGuid();
@@ -34,7 +34,7 @@ public sealed class ViewJournalEntryTests
         var accountingSubjectId = Guid.NewGuid();
         var journalEntryId = PostJournalEntry(context, postingActorUserId, accountingSubjectId);
 
-        var exception = Assert.Throws<ActorMustHaveLedgerPowerViolation>(() =>
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
             context.ViewJournalEntry.Handle(
                 new ViewJournalEntryQuery(viewingActorUserId, journalEntryId)));
 

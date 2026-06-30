@@ -154,11 +154,8 @@ internal static class ChartOfAccountsEndpoints
     private static IResult InvariantProblem(InvariantViolationException exception) =>
         Problem(exception, exception switch
         {
-            AccountingSubjectMustBeRecognizedForChartOfAccountsViolation =>
-                StatusCodes.Status404NotFound,
             AccountMustBeRecognizedByChartOfAccountsViolation =>
                 StatusCodes.Status404NotFound,
-            ActorMustHaveChartOfAccountsPowerViolation => StatusCodes.Status403Forbidden,
             AccountingSubjectMustHaveAtMostOneOperativeChartOfAccountsViolation =>
                 StatusCodes.Status409Conflict,
             AccountNumberMustBeUniqueWithinChartOfAccountsViolation =>

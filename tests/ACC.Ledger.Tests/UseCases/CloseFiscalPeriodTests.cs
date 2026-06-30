@@ -1,3 +1,4 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.Ledger.Application.UseCases.CloseFiscalPeriod;
 using ACC.Ledger.Application.UseCases.OpenFiscalPeriod;
 using ACC.Ledger.Domain.Aggregates;
@@ -63,7 +64,7 @@ public sealed class CloseFiscalPeriodTests
     }
 
     [Fact]
-    public void GivenActorWithoutCloseFiscalPeriodPower_WhenClosing_ThenActorMustHavePowerViolation()
+    public void GivenActorWithoutCloseFiscalPeriodPower_WhenClosing_ThenAuthorizationDenied()
     {
         var context = new LedgerUseCaseTestContext();
         var actorUserId = Guid.NewGuid();
@@ -77,7 +78,7 @@ public sealed class CloseFiscalPeriodTests
                 new DateOnly(2026, 12, 31)),
             DateTimeOffset.UtcNow);
 
-        var exception = Assert.Throws<ActorMustHaveLedgerPowerViolation>(() =>
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
             context.CloseFiscalPeriod.Handle(
                 new CloseFiscalPeriodCommand(actorUserId, opened.FiscalPeriodId),
                 DateTimeOffset.UtcNow));

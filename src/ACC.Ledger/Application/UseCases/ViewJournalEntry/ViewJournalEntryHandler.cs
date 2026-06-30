@@ -1,6 +1,6 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.Ledger.Application.Ports.Authority;
 using ACC.Ledger.Application.Ports.ReadModels.JournalEntry;
-using ACC.Ledger.Domain.Invariants;
 using ACC.BuildingBlocks.Failures;
 
 namespace ACC.Ledger.Application.UseCases.ViewJournalEntry;
@@ -30,10 +30,11 @@ public sealed class ViewJournalEntryHandler
             return null;
         }
 
-        ActorMustHaveLedgerPower.Ensure(
-            authority.CanViewJournalEntry(query.ActorUserId, journalEntry.AccountingSubjectId),
-            query.ActorUserId,
-            "view a journal entry");
+        if (!authority.CanViewJournalEntry(query.ActorUserId, journalEntry.AccountingSubjectId))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {query.ActorUserId} must have power to view a journal entry.");
+        }
 
         return new ViewJournalEntryResponse(
             journalEntry.JournalEntryId,

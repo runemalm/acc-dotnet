@@ -1,8 +1,8 @@
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.EventSourcing;
 using ACC.BuildingBlocks.Failures;
 using ACC.ChartOfAccounts.Application.Ports.Authority;
 using ACC.ChartOfAccounts.Domain.Events;
-using ACC.ChartOfAccounts.Domain.Invariants;
 using ACC.ChartOfAccounts.Infrastructure.ReadModels.ChartOfAccounts;
 
 namespace ACC.ChartOfAccounts.Application.UseCases.DeactivateAccount;
@@ -29,10 +29,11 @@ public sealed class DeactivateAccountHandler
         ValidateCommand(command);
         var chart = LoadChart(command.ChartOfAccountsId);
 
-        ActorMustHaveChartOfAccountsPower.Ensure(
-            authority.CanManageChartOfAccounts(command.ActorUserId, chart.AccountingSubjectId),
-            command.ActorUserId,
-            "deactivate an account");
+        if (!authority.CanManageChartOfAccounts(command.ActorUserId, chart.AccountingSubjectId))
+        {
+            throw new AuthorizationDeniedException(
+                $"User {command.ActorUserId} must have power to deactivate an account.");
+        }
 
         chart.DeactivateAccount(command.AccountNumber, command.ActorUserId, deactivatedAt);
         var storedEvents = charts.Save(ChartStream(command.ChartOfAccountsId), chart);

@@ -102,9 +102,6 @@ internal static class AuthorityEndpoints
     private static IResult InvariantProblem(InvariantViolationException exception) =>
         Problem(exception, exception switch
         {
-            UserMustBeRecognizedForAuthorityViolation => StatusCodes.Status404NotFound,
-            AccountingSubjectMustBeRecognizedForAuthorityViolation => StatusCodes.Status404NotFound,
-            ActorMustHavePowerViolation => StatusCodes.Status403Forbidden,
             ActiveRoleAssignmentMustBeUniqueViolation => StatusCodes.Status409Conflict,
             RoleAssignmentMustBeActiveToRevokeViolation => StatusCodes.Status409Conflict,
             _ => throw new InvalidOperationException(

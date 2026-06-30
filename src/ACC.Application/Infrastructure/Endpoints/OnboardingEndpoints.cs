@@ -71,12 +71,7 @@ internal static class OnboardingEndpoints
         {
             AccountingSubjectOrganizationNumberMustBeUniqueViolation =>
                 StatusCodes.Status409Conflict,
-            UserMustBeRecognizedForAuthorityViolation => StatusCodes.Status404NotFound,
-            AccountingSubjectMustBeRecognizedForAuthorityViolation => StatusCodes.Status404NotFound,
             ActiveRoleAssignmentMustBeUniqueViolation => StatusCodes.Status409Conflict,
-            AccountingSubjectMustBeRecognizedForChartOfAccountsViolation =>
-                StatusCodes.Status404NotFound,
-            ActorMustHaveChartOfAccountsPowerViolation => StatusCodes.Status403Forbidden,
             AccountingSubjectMustHaveAtMostOneOperativeChartOfAccountsViolation =>
                 StatusCodes.Status409Conflict,
             AccountNumberMustBeUniqueWithinChartOfAccountsViolation =>

@@ -1,6 +1,7 @@
 using ACC.Authority.Application.UseCases.AssignRole;
 using ACC.Authority.Domain.Aggregates;
 using ACC.Authority.Domain.Invariants;
+using ACC.BuildingBlocks.Authorization;
 using ACC.BuildingBlocks.Failures;
 using ACC.Authority.Tests.TestKit;
 using Xunit;
@@ -85,14 +86,14 @@ public sealed class AssignRoleTests
     }
 
     [Fact]
-    public void GivenUnrecognizedUser_WhenAssigningRole_ThenUserMustBeRecognizedForAuthorityViolation()
+    public void GivenUnrecognizedUser_WhenAssigningRole_ThenRequiredUserNotFound()
     {
         var context = new AuthorityUseCaseTestContext();
         var userId = Guid.NewGuid();
         var accountingSubjectId = Guid.NewGuid();
         var actorUserId = context.EstablishOwner(accountingSubjectId);
 
-        var exception = Assert.Throws<UserMustBeRecognizedForAuthorityViolation>(() =>
+        var exception = Assert.Throws<RequiredObjectNotFoundException>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,
@@ -101,11 +102,11 @@ public sealed class AssignRoleTests
                     Role.Owner),
                 DateTimeOffset.UtcNow));
 
-        Assert.Contains("must be recognized before authority can be assigned", exception.Message);
+        Assert.Contains("Receiving user", exception.Message);
     }
 
     [Fact]
-    public void GivenUnrecognizedAccountingSubject_WhenAssigningRole_ThenAccountingSubjectMustBeRecognizedForAuthorityViolation()
+    public void GivenUnrecognizedAccountingSubject_WhenAssigningRole_ThenRequiredAccountingSubjectNotFound()
     {
         var context = new AuthorityUseCaseTestContext();
         var actorUserId = Guid.NewGuid();
@@ -114,7 +115,7 @@ public sealed class AssignRoleTests
         context.RecognizeUser(actorUserId);
         context.RecognizeUser(userId);
 
-        var exception = Assert.Throws<AccountingSubjectMustBeRecognizedForAuthorityViolation>(() =>
+        var exception = Assert.Throws<RequiredObjectNotFoundException>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,
@@ -123,11 +124,11 @@ public sealed class AssignRoleTests
                     Role.Owner),
                 DateTimeOffset.UtcNow));
 
-        Assert.Contains("must be recognized before authority can be assigned", exception.Message);
+        Assert.Contains("Accounting subject", exception.Message);
     }
 
     [Fact]
-    public void GivenActorWithoutAssignRolePower_WhenAssigningRole_ThenActorMustHavePowerViolation()
+    public void GivenActorWithoutAssignRolePower_WhenAssigningRole_ThenAuthorizationDenied()
     {
         var context = new AuthorityUseCaseTestContext();
         var actorUserId = Guid.NewGuid();
@@ -137,7 +138,7 @@ public sealed class AssignRoleTests
         context.RecognizeUser(userId);
         context.RecognizeAccountingSubject(accountingSubjectId);
 
-        var exception = Assert.Throws<ActorMustHavePowerViolation>(() =>
+        var exception = Assert.Throws<AuthorizationDeniedException>(() =>
             context.AssignRole.Handle(
                 new AssignRoleCommand(
                     actorUserId,

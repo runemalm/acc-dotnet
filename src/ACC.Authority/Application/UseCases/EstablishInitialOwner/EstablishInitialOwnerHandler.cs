@@ -37,12 +37,18 @@ public sealed class EstablishInitialOwnerHandler
         ArgumentNullException.ThrowIfNull(command);
         ValidateCommand(command);
 
-        UserMustBeRecognizedForAuthority.Ensure(
-            recognizedUsers.IsRecognizedUser(command.ActorUserId),
-            command.ActorUserId);
-        AccountingSubjectMustBeRecognizedForAuthority.Ensure(
-            recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId),
-            command.AccountingSubjectId);
+        if (!recognizedUsers.IsRecognizedUser(command.ActorUserId))
+        {
+            throw new RequiredObjectNotFoundException(
+                $"User {command.ActorUserId} is required to establish an initial owner.");
+        }
+
+        if (!recognizedAccountingSubjects.IsRecognizedAccountingSubject(command.AccountingSubjectId))
+        {
+            throw new RequiredObjectNotFoundException(
+                $"Accounting subject {command.AccountingSubjectId} is required to establish an initial owner.");
+        }
+
         ActiveRoleAssignmentMustBeUnique.Ensure(
             !roleAssignmentStore.ActiveAssignmentExists(
                 command.ActorUserId,
